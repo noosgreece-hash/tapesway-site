@@ -91,10 +91,9 @@
   // fitted to a fixed box, then projected onto the table by setupStory().
   function tableTitle(tt) {
     if (!tt || !tt.text) return "";
-    var letters = tt.text.split("").map(function (ch) { return "<tspan>" + esc(ch) + "</tspan>"; }).join("");
     return '<div class="table-title" aria-hidden="true"><div class="table-title-plane">' +
       '<svg viewBox="0 0 1000 90" preserveAspectRatio="none"><text x="0" y="87" textLength="1000" lengthAdjust="spacing">' +
-      letters + "</text></svg></div></div>";
+      esc(tt.text) + "</text></svg></div></div>";
   }
 
   function sectionHead(o) {
@@ -343,7 +342,7 @@
     var bar = $(".story-progress b");
     var skip = $(".story-skip");
     var copies = $$("[data-copy]", stage);
-    var seq = null, timeline = null, variantName = null, dir = 1;
+    var seq = null, timeline = null, variantName = null, dir = 1, tableTrack = null;
     // Playback follows the scroll position on a critically damped spring (native
     // scrolling is untouched): it speeds up and slows down gradually, so when the
     // visitor stops scrolling the film glides to rest instead of halting.
@@ -392,9 +391,7 @@
           f0: clamp(Math.round(p.from * fps), 0, count - 1), f1: clamp(Math.round(p.to * fps), 0, count - 1) };
         acc += p.vh; return s;
       });
-      var last = segs[segs.length - 1];
-      var hold = last && last.f0 === last.f1 && last.f0 === count - 1 ? last : null;
-      return { segs: segs, total: acc, hold: hold };
+      return { segs: segs, total: acc };
     }
     function frameAt(t) {
       var segs = timeline.segs;
@@ -414,7 +411,6 @@
     // Table lettering: map the text box onto the four table corners with a
     // projective (matrix3d) transform, inside a layer that follows the canvas's cover crop.
     var tt = $(".table-title", stage), ttPlane = tt ? $(".table-title-plane", tt) : null;
-    var ttLetters = tt ? $$("tspan", tt) : [];
     function quadMatrix(w, h, q) {
       var x0 = q[0][0], y0 = q[0][1], x1 = q[1][0], y1 = q[1][1], x2 = q[2][0], y2 = q[2][1], x3 = q[3][0], y3 = q[3][1];
       var dx1 = x1 - x2, dx2 = x3 - x2, dx3 = x0 - x1 + x2 - x3, dy1 = y1 - y2, dy2 = y3 - y2, dy3 = y0 - y1 + y2 - y3;
@@ -424,28 +420,22 @@
     }
     function placeTitle() {
       if (!tt) return;
-      var quad = seq && C.story.tableTitle && C.story.tableTitle[variantName];
-      tt.hidden = !quad;
-      if (!quad) return;
+      tt.hidden = !(seq && tableTrack && C.story.tableTitle && C.story.tableTitle[variantName]);
+      if (tt.hidden) return;
       var W = stage.clientWidth, H = stage.clientHeight, iw = seq.m.width, ih = seq.m.height;
       var sc = Math.max(W / iw, H / ih), fx = seq.m.focalX != null ? seq.m.focalX : 0.5, fy = seq.m.focalY != null ? seq.m.focalY : 0.5;
       tt.style.width = iw + "px"; tt.style.height = ih + "px";
       tt.style.transform = "translate(" + ((W - iw * sc) * fx).toFixed(2) + "px," + ((H - ih * sc) * fy).toFixed(2) + "px) scale(" + sc.toFixed(5) + ")";
-      ttPlane.style.transform = quadMatrix(1000, 90, quad);
     }
-    function titleProgress(t) {
-      var h = timeline && timeline.hold;
-      if (!h || !seq) return 0;
-      return ramp(t, h.start, h.start + h.vh * 0.7);
-    }
-    function renderTitle(t) {
-      if (!tt) return;
-      var p = titleProgress(t), n = ttLetters.length;
-      tt.style.opacity = p > 0 ? 1 : 0;
-      // Letters ink in one after another, left to right.
-      ttLetters.forEach(function (el, i) {
-        el.style.fillOpacity = (0.9 * ramp(p, i / (n + 2), (i + 3) / (n + 2))).toFixed(3);
-      });
+    // Carry the lettering onto frame i with the tracked table movement (hidden where the table is out of view).
+    var ttFrame = -2;
+    function setTitleFrame(i) {
+      if (!tt || i === ttFrame) return;
+      ttFrame = i;
+      var tr = tableTrack && tableTrack[i], quads = C.story.tableTitle && C.story.tableTitle[variantName];
+      var quad = tr && quads && (tr[0] === 0 ? quads.opening : quads.ending);
+      tt.style.opacity = quad ? 1 : 0;
+      if (quad) ttPlane.style.transform = "matrix(" + tr[1] + ",0,0," + tr[1] + "," + tr[2] + "," + tr[3] + ") " + quadMatrix(1000, 90, quad);
     }
 
     function sizeCanvas() {
@@ -471,10 +461,11 @@
       var c = seq.touch(i);
       if (!c) {
         misses++;
-        if (!drawnKey) { var near = seq.nearestReady(i); if (near) paint(near); }
+        if (!drawnKey) { var near = seq.nearestReady(i); if (near) { paint(near); setTitleFrame(-1); } }
         seq.decode(i).then(function (c) { if (c) { drawnKey = ""; request(); } });
       } else {
         paint(c);
+        setTitleFrame(i);
         drawnKey = String(i);
       }
       // Decode tiles ahead in the direction of travel, and one behind.
@@ -496,7 +487,6 @@
       if (seq && String(Math.round(f)) !== drawnKey) show(f);
       bar.style.transform = "scaleX(" + (t / timeline.total).toFixed(4) + ")";
 
-      renderTitle(t);
       copies.forEach(function (el) { el.style.opacity = copyOpacity(el.getAttribute("data-copy"), t).toFixed(3); });
       var nearEnd = t > timeline.total - 0.35 || track.getBoundingClientRect().bottom < window.innerHeight * 0.5;
       skip.classList.toggle("is-hidden", nearEnd);
@@ -528,7 +518,7 @@
 
     function load(name) {
       if (seq) { seq.destroy(); seq = null; }
-      drawnKey = ""; shownT = -1; prevTarget = -1; velT = 0;
+      drawnKey = ""; shownT = -1; prevTarget = -1; velT = 0; tableTrack = null; ttFrame = -2;
       story.classList.remove("is-live");
       variantName = name;
       var pacing = C.pacing[name];
@@ -550,7 +540,10 @@
           seq.onprogress = preloadProgress;
           seq.active = storyNear;
           sizeCanvas();
-          placeTitle();
+          // Table movement for the lettering; without it the lettering simply stays hidden.
+          fetch(base + "table.json").then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+            .then(function (d) { if (variantName !== name) return; tableTrack = d.frames; ttFrame = -2; placeTitle(); drawnKey = ""; request(); })
+            .catch(function () {});
           update();
         })
         .catch(fallback);

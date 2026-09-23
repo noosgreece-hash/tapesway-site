@@ -283,13 +283,14 @@ html.is-preloading, html.is-preloading body { overflow: hidden; }
   font-family: var(--font-display); font-size: 110px; font-weight: 520;
   font-variation-settings: "opsz" 144, "SOFT" 30;
   font-kerning: none; font-feature-settings: "kern" 0;
-  fill: #1d1716; fill-opacity: 0;
+  fill: #1d1716; fill-opacity: .9;
 }
 
 /* Scroll cue: a line that draws down, no words. Fades as soon as the story starts. */
 .scroll-cue {
-  position: absolute; z-index: 3; left: 50%; bottom: calc(26px + var(--bar-gap) + var(--safe-bottom));
-  transform: translateX(-50%);
+  /* right edge, mid-height: the bottom of the frame belongs to the lettering on the table */
+  position: absolute; z-index: 3; right: calc(var(--gutter) + var(--safe-right, 0px)); top: 50%;
+  transform: translateY(-50%);
   width: 26px; height: 44px; border: 1.5px solid rgba(246, 239, 228, .85); border-radius: 13px;
   box-shadow: 0 0 0 1px rgba(20, 18, 21, .18), 0 6px 18px rgba(20, 18, 21, .25);
   pointer-events: none;

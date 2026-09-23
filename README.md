@@ -18,7 +18,7 @@ Any static host works (GitHub Pages, Netlify, Cloudflare Pages, S3). Opening `in
 Everything visitors read is in **`content.js`**: headlines, services, process, contact details and form labels. The scroll story itself has no text on it. Edit the text, save and reload. Items marked `PLACEHOLDER` are assumptions to confirm before going live, including the email address and the location.
 
 - **Scroll pacing:** `pacing.desktop` and `pacing.mobile` list each beat's scroll distance (`vh`, in viewport heights) and the stretch of the clip it plays (`from`/`to`, in seconds). A beat with `from` equal to `to` is a still hold. Smaller `vh` numbers play faster. `copy` says which caption shows during the beat.
-- **Lettering on the table:** `story.tableTitle` sets the word and the four corners where it lies on the table in the last frame, for desktop and for phones. The corners follow the table's perspective. Measure them again if the clip changes (the phone ones will need it when the portrait clip replaces the interim crop).
+- **Lettering on the table:** `story.tableTitle` sets the word and the four corners where it lies on the table in the first frame (`opening`) and the last frame (`ending`), for desktop and for phones. The corners follow the table's perspective. `media/<variant>/table.json` moves it with the table in between. If the clip changes, measure the corners again and re-run `tools/track-table.py` (the phone ones will need it when the portrait clip replaces the interim crop).
 - **Contact form:** by default it opens the visitor's email app, addressed to `contact.email`. To receive submissions directly, set `contact.formEndpoint` to a form service URL that accepts POST, such as Formspree.
 
 ## Loading screen
@@ -48,4 +48,5 @@ source/                          original client clip
 docs/VISUAL-STORY.md             storyboard, scene connections, pacing plan
 docs/PRODUCTION-NOTES.md         direction, assumptions, provenance, checks, limits
 tools/build-sequence.sh          clip → frame atlases + manifest
+tools/track-table.py             clip → table.json (keeps the lettering on the table)
 ```

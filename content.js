@@ -30,7 +30,19 @@ window.TAPESWAY_CONTENT = {
   */
   story: {
     skipLabel: "Skip the story",
-    skipHref: "#services"
+    skipHref: "#services",
+    /*
+      Lettering that appears on the table in the last frame and stays on it as
+      the page scrolls on. "desktop" / "mobile" give where it lies, in pixels of
+      that sequence's last frame: far-left, far-right, near-right, near-left
+      corners. The corners follow the table's perspective (lines meet on the sea
+      horizon). Measure them again if the clip changes.
+    */
+    tableTitle: {
+      text: "TAPESWAY",
+      desktop: [[307, 850], [1613, 850], [1770, 985], [150, 985]],
+      mobile: [[85, 955], [519, 955], [540, 1010], [70, 1010]]
+    }
   },
 
   /*
@@ -47,7 +59,7 @@ window.TAPESWAY_CONTENT = {
       { id: "film-strip", vh: 1.9,  from: 4.15, to: 7.9 },
       { id: "pull-out",   vh: 0.6,  from: 7.9,  to: 9.25 },
       { id: "reveal",     vh: 1.05, from: 9.25, to: 12.0 },
-      { id: "final-hold", vh: 0.2,  from: 12.0, to: 12.0 }
+      { id: "final-hold", vh: 0.6,  from: 12.0, to: 12.0 } // the table lettering writes itself here
     ],
     mobile: [
       { id: "open-hold",  vh: 0.1,  from: 0.0,  to: 0.0 },
@@ -56,7 +68,7 @@ window.TAPESWAY_CONTENT = {
       { id: "film-strip", vh: 1.25, from: 4.15, to: 7.9 },
       { id: "pull-out",   vh: 0.45, from: 7.9,  to: 9.25 },
       { id: "reveal",     vh: 0.7,  from: 9.25, to: 12.0 },
-      { id: "final-hold", vh: 0.15, from: 12.0, to: 12.0 }
+      { id: "final-hold", vh: 0.45, from: 12.0, to: 12.0 }
     ]
   },
 

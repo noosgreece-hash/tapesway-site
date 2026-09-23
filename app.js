@@ -73,6 +73,7 @@
             '<img src="media/desktop/poster.webp" alt="' + esc(st.hero.alt) + '" fetchpriority="high" decoding="async">' +
           "</picture>" +
           '<canvas class="story-canvas" aria-hidden="true"></canvas>' +
+          tableTitle(S.tableTitle) +
           '<div class="scroll-cue" data-copy="cue" aria-hidden="true"><i></i></div>' +
           '<div class="story-hud" aria-hidden="true"><div class="story-progress"><b></b></div></div>' +
           '<a class="story-skip" href="' + esc(S.skipHref) + '">' + esc(S.skipLabel) + ' <span aria-hidden="true">↓</span></a>' +
@@ -84,6 +85,16 @@
           return '<div class="static-chapter">' + picture(st[k].src, st[k].alt, "100vw", i === 0) + "</div>";
         }).join("") +
       "</div>";
+  }
+
+  // Big capitals that lie on the table in the final frame. Drawn as SVG text
+  // fitted to a fixed box, then projected onto the table by setupStory().
+  function tableTitle(tt) {
+    if (!tt || !tt.text) return "";
+    var letters = tt.text.split("").map(function (ch) { return "<tspan>" + esc(ch) + "</tspan>"; }).join("");
+    return '<div class="table-title" aria-hidden="true"><div class="table-title-plane">' +
+      '<svg viewBox="0 0 1000 90" preserveAspectRatio="none"><text x="0" y="87" textLength="1000" lengthAdjust="spacing">' +
+      letters + "</text></svg></div></div>";
   }
 
   function sectionHead(o) {
@@ -333,9 +344,12 @@
     var skip = $(".story-skip");
     var copies = $$("[data-copy]", stage);
     var seq = null, timeline = null, variantName = null, dir = 1;
-    // Playback eases toward the scroll position (native scrolling is untouched),
-    // so a wheel notch or a flick plays through every in-between frame instead of jumping.
-    var misses = 0, TAU = 110, targetT = 0, shownT = -1, lastNow = 0, running = false, drawnKey = "";
+    // Playback follows the scroll position on a critically damped spring (native
+    // scrolling is untouched): it speeds up and slows down gradually, so when the
+    // visitor stops scrolling the film glides to rest instead of halting.
+    // Lower OMEGA = longer, softer glide (settles in about 6.6 / OMEGA seconds).
+    var OMEGA = 6.5, JUMP = 1.0; // JUMP: target moves further than this (viewport heights) in one frame = cut, not glide
+    var misses = 0, targetT = 0, shownT = -1, velT = 0, prevTarget = -1, lastNow = 0, running = false, drawnKey = "";
 
     function motionOn() { return root.classList.contains("motion"); }
 
@@ -378,7 +392,9 @@
           f0: clamp(Math.round(p.from * fps), 0, count - 1), f1: clamp(Math.round(p.to * fps), 0, count - 1) };
         acc += p.vh; return s;
       });
-      return { segs: segs, total: acc };
+      var last = segs[segs.length - 1];
+      var hold = last && last.f0 === last.f1 && last.f0 === count - 1 ? last : null;
+      return { segs: segs, total: acc, hold: hold };
     }
     function frameAt(t) {
       var segs = timeline.segs;
@@ -395,10 +411,48 @@
     // The scroll cue fades out as soon as the story starts moving.
     function copyOpacity(key, t) { return 1 - ramp(t, 0.02, 0.25); }
 
+    // Table lettering: map the text box onto the four table corners with a
+    // projective (matrix3d) transform, inside a layer that follows the canvas's cover crop.
+    var tt = $(".table-title", stage), ttPlane = tt ? $(".table-title-plane", tt) : null;
+    var ttLetters = tt ? $$("tspan", tt) : [];
+    function quadMatrix(w, h, q) {
+      var x0 = q[0][0], y0 = q[0][1], x1 = q[1][0], y1 = q[1][1], x2 = q[2][0], y2 = q[2][1], x3 = q[3][0], y3 = q[3][1];
+      var dx1 = x1 - x2, dx2 = x3 - x2, dx3 = x0 - x1 + x2 - x3, dy1 = y1 - y2, dy2 = y3 - y2, dy3 = y0 - y1 + y2 - y3;
+      var den = dx1 * dy2 - dx2 * dy1, g = (dx3 * dy2 - dx2 * dy3) / den, hh = (dx1 * dy3 - dx3 * dy1) / den;
+      var a = x1 - x0 + g * x1, b = x3 - x0 + hh * x3, d = y1 - y0 + g * y1, e = y3 - y0 + hh * y3;
+      return "matrix3d(" + [a / w, d / w, 0, g / w, b / h, e / h, 0, hh / h, 0, 0, 1, 0, x0, y0, 0, 1].join(",") + ")";
+    }
+    function placeTitle() {
+      if (!tt) return;
+      var quad = seq && C.story.tableTitle && C.story.tableTitle[variantName];
+      tt.hidden = !quad;
+      if (!quad) return;
+      var W = stage.clientWidth, H = stage.clientHeight, iw = seq.m.width, ih = seq.m.height;
+      var sc = Math.max(W / iw, H / ih), fx = seq.m.focalX != null ? seq.m.focalX : 0.5, fy = seq.m.focalY != null ? seq.m.focalY : 0.5;
+      tt.style.width = iw + "px"; tt.style.height = ih + "px";
+      tt.style.transform = "translate(" + ((W - iw * sc) * fx).toFixed(2) + "px," + ((H - ih * sc) * fy).toFixed(2) + "px) scale(" + sc.toFixed(5) + ")";
+      ttPlane.style.transform = quadMatrix(1000, 90, quad);
+    }
+    function titleProgress(t) {
+      var h = timeline && timeline.hold;
+      if (!h || !seq) return 0;
+      return ramp(t, h.start, h.start + h.vh * 0.7);
+    }
+    function renderTitle(t) {
+      if (!tt) return;
+      var p = titleProgress(t), n = ttLetters.length;
+      tt.style.opacity = p > 0 ? 1 : 0;
+      // Letters ink in one after another, left to right.
+      ttLetters.forEach(function (el, i) {
+        el.style.fillOpacity = (0.9 * ramp(p, i / (n + 2), (i + 3) / (n + 2))).toFixed(3);
+      });
+    }
+
     function sizeCanvas() {
       var dpr = Math.min(window.devicePixelRatio || 1, 2);
       var w = Math.round(stage.clientWidth * dpr), h = Math.round(stage.clientHeight * dpr);
       if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; drawnKey = ""; }
+      placeTitle();
     }
     function paint(c) {
       var cw = canvas.width, ch = canvas.height, iw = c.sw, ih = c.sh;
@@ -442,6 +496,7 @@
       if (seq && String(Math.round(f)) !== drawnKey) show(f);
       bar.style.transform = "scaleX(" + (t / timeline.total).toFixed(4) + ")";
 
+      renderTitle(t);
       copies.forEach(function (el) { el.style.opacity = copyOpacity(el.getAttribute("data-copy"), t).toFixed(3); });
       var nearEnd = t > timeline.total - 0.35 || track.getBoundingClientRect().bottom < window.innerHeight * 0.5;
       skip.classList.toggle("is-hidden", nearEnd);
@@ -450,25 +505,30 @@
     function tick(now) {
       if (!timeline) { running = false; return; }
       targetT = readScroll();
-      if (targetT !== shownT) dir = targetT > shownT ? 1 : -1;
-      // Big jumps (anchor links, skip, first paint) cut straight to the new place.
-      if (shownT < 0 || Math.abs(frameAt(targetT) - frameAt(shownT)) > 90) shownT = targetT;
+      // Big jumps (anchor links, skip, first paint, the End key) cut straight to the new place.
+      if (shownT < 0 || prevTarget < 0 || Math.abs(targetT - prevTarget) > JUMP) { shownT = targetT; velT = 0; }
       else {
-        var dt = lastNow ? Math.min(now - lastNow, 64) : 16;
-        shownT += (targetT - shownT) * (1 - Math.exp(-dt / TAU));
-        if (Math.abs(targetT - shownT) < 0.0005) shownT = targetT;
+        var dt = (lastNow ? Math.min(now - lastNow, 64) : 16) / 1000;
+        // Exact step of a critically damped spring towards the target.
+        var x = shownT - targetT, e = Math.exp(-OMEGA * dt), k = velT + OMEGA * x;
+        var nx = (x + k * dt) * e, nv = (velT - OMEGA * k * dt) * e;
+        if (x !== 0 && nx * x < 0) { nx = 0; nv = 0; } // never overshoot and play backwards
+        shownT = targetT + nx; velT = nv;
+        if (Math.abs(nx) < 0.0004 && Math.abs(nv) < 0.002) { shownT = targetT; velT = 0; }
       }
+      if (velT) dir = velT > 0 ? 1 : -1; else if (targetT !== shownT) dir = targetT > shownT ? 1 : -1;
+      prevTarget = targetT;
       lastNow = now;
       render(shownT);
       if (shownT !== targetT) requestAnimationFrame(tick);
-      else { running = false; lastNow = 0; }
+      else { running = false; lastNow = 0; velT = 0; }
     }
     function request() { if (!running) { running = true; requestAnimationFrame(tick); } }
     function update() { request(); }
 
     function load(name) {
       if (seq) { seq.destroy(); seq = null; }
-      drawnKey = ""; shownT = -1;
+      drawnKey = ""; shownT = -1; prevTarget = -1; velT = 0;
       story.classList.remove("is-live");
       variantName = name;
       var pacing = C.pacing[name];
@@ -490,6 +550,7 @@
           seq.onprogress = preloadProgress;
           seq.active = storyNear;
           sizeCanvas();
+          placeTitle();
           update();
         })
         .catch(fallback);

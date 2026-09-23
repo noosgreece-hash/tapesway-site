@@ -20,11 +20,16 @@ Everything visitors read is in **`content.js`**, in the order it appears on the 
 - A `title` can be one line or a list of lines; each line starts on its own, and later lines are set in a quieter tone.
 - `text` is a list of paragraphs. `**word**` makes a word bold and `\n` breaks a line inside a paragraph.
 - Buttons and menu items are `{ label, href }`; `#offer`, `#approach`, `#languages`, `#work`, `#process`, `#time`, `#value` and `#contact` jump to those sections, `#intro` to the top of the copy.
-- `work.items` is a `PLACEHOLDER`: frames from the film stand in until real project photos are added.
+- `work.image` is a `PLACEHOLDER`: the camera from the film stands in until real project photos are added. No other stills from the film appear in the sections.
 
 - **Scroll pacing:** `pacing.desktop` and `pacing.mobile` list each beat's scroll distance (`vh`, in viewport heights) and the stretch of the clip it plays (`from`/`to`, in seconds). A beat with `from` equal to `to` is a still hold. Smaller `vh` numbers play faster.
 - **Lettering on the table:** `story.tableTitle` sets the word and the four corners where it lies on the table in the first frame (`opening`) and the last frame (`ending`), for desktop and for phones. The corners follow the table's perspective. `media/<variant>/table.json` moves it with the table in between. If the clip changes, measure the corners again and re-run `tools/track-table.py` (the phone ones will need it when the portrait clip replaces the interim crop).
 - **Contact form:** by default it opens the visitor's email app, addressed to `contact.email`. To receive submissions directly, set `contact.formEndpoint` to a form service URL that accepts POST, such as Formspree.
+
+## Scrolling through the sections
+The sections guide the eye rather than show everything at once. Each block arrives in reading order (eyebrow, then the title line by line, then the text, then cards, which rise in with a slight tilt) and then stays still. The four offer cards stack: each holds under the header while the next slides over it, and the one underneath settles back and fades. On wide screens the headings of Approach, Process, Time and Value hold still beside the content scrolling past. Short lists (the three statements, the questions, the eight tasks, the result lines) light up one line at a time as they scroll into view. None of this changes how far or how fast the page scrolls.
+
+Safety rules in `app.js`: anything that would be taller than the screen does not stick (it simply scrolls), so no text is ever hidden; with reduced motion everything is shown plainly and nothing moves. The code is `setupReveals` and `setupScrollFx`; the styles are under "Motion" in `styles.css`.
 
 ## Type
 Headings use Noto Serif Display and body text Inter Tight, both with full Greek. Fraunces (Latin only) sets the tapesway wordmark, the lettering on the table and the numerals. Each family ships as separate Greek and Latin files, and the browser fetches only what a page uses. Labels are in sentence case on purpose, because upper-casing Greek misplaces accents in some browsers.

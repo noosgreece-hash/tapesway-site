@@ -126,16 +126,24 @@
   }
   function head(o, id, tag) {
     tag = tag || "h2";
-    return '<div class="head reveal">' + eyebrow(o.eyebrow) + "<" + tag + ' id="' + id + '-title">' + titleLines(o.title) + "</" + tag + "></div>";
+    return '<div class="head">' + eyebrow(o.eyebrow) + "<" + tag + ' id="' + id + '-title">' + titleLines(o.title) + "</" + tag + "></div>";
   }
   function prose(list, extra) {
-    return list && list.length ? '<div class="prose reveal' + (extra ? " " + extra : "") + '">' + paras(list) + "</div>" : "";
+    return list && list.length ? '<div class="prose' + (extra ? " " + extra : "") + '">' + paras(list) + "</div>" : "";
   }
   function kicker(number, label) {
     return '<div class="kicker"><span class="num" aria-hidden="true">' + esc(number) + '</span><span class="tag">' + esc(label) + "</span></div>";
   }
   function closing(lines, extra) {
-    return lines ? '<p class="closing reveal' + (extra ? " " + extra : "") + '">' + titleLines(lines) + "</p>" : "";
+    return lines ? '<p class="closing' + (extra ? " " + extra : "") + '">' + titleLines(lines) + "</p>" : "";
+  }
+  // A list whose lines light up one after another as it scrolls into view.
+  function focusList(list, cls) {
+    return list && list.length ? '<ul class="' + cls + ' focus-list" role="list">' + listItems(list) + "</ul>" : "";
+  }
+  // Two columns on wide screens: the aside holds still while the main column scrolls past it.
+  function split(aside, main, extra) {
+    return '<div class="wrap split' + (extra ? " " + extra : "") + '"><div class="split-aside">' + aside + '</div><div class="split-main">' + main + "</div></div>";
   }
   function fill(name, html) {
     var el = $('[data-render="' + name + '"]');
@@ -146,7 +154,7 @@
     var h = C.hero;
     fill("intro", '<div class="wrap">' + head(h, "intro", "h1").replace('class="head', 'class="head head--hero') +
       '<div class="intro-body">' + prose(h.text) +
-        '<div class="intro-aside reveal">' + (h.highlight ? '<p class="highlight">' + inline(h.highlight) + "</p>" : "") +
+        '<div class="intro-aside">' + (h.highlight ? '<p class="highlight">' + inline(h.highlight) + "</p>" : "") +
           '<div class="actions">' + h.actions.map(function (a) { return btn(a, "btn--" + (a.style || "primary")); }).join("") + "</div>" +
         "</div>" +
       "</div></div>");
@@ -154,52 +162,46 @@
     var o = C.offer;
     fill("offer", '<div class="wrap">' + head(o, "offer") + prose(o.text, "prose--offset") +
       '<ol class="pillars" role="list">' + o.items.map(function (it) {
-        return '<li class="pillar reveal">' + kicker(it.number, it.label) + "<h3>" + inline(it.title) + "</h3>" + paras(it.text) + "</li>";
+        return '<li class="pillar"><div class="pillar-card"><div class="pillar-head">' + kicker(it.number, it.label) + "<h3>" + inline(it.title) + "</h3></div>" +
+          '<div class="pillar-text">' + paras(it.text) + "</div></div></li>";
       }).join("") + "</ol></div>");
 
     var a = C.approach;
-    fill("approach", '<div class="wrap">' + head(a, "approach") +
-      '<div class="approach-grid"><div class="approach-copy">' +
-        '<ul class="statements reveal" role="list">' + listItems(a.statements) + "</ul>" +
-        prose(a.text) +
-        '<ul class="questions reveal" role="list">' + listItems(a.questions) + "</ul>" +
-        closing(a.closing) +
-      "</div>" +
-      (a.image ? '<figure class="approach-image reveal"><div class="film">' + picture(a.image, a.imageAlt, "(max-width: 899px) 92vw, 40vw") + "</div></figure>" : "") +
-      "</div></div>");
+    fill("approach", split(head(a, "approach"),
+      focusList(a.statements, "statements") + prose(a.text) + focusList(a.questions, "questions") + closing(a.closing)));
 
     var l = C.languages;
     fill("languages", '<div class="wrap lang-grid"><div>' + head(l, "languages") + prose(l.text) + closing(l.closing) + "</div>" +
-      '<p class="codes reveal" aria-hidden="true">' + (l.codes || []).map(function (c) { return "<span>" + esc(c) + "</span>"; }).join("") + "</p></div>");
+      '<p class="codes" aria-hidden="true">' + (l.codes || []).map(function (c) { return "<span>" + esc(c) + "</span>"; }).join("") + "</p></div>");
 
     var w = C.work;
     fill("work", '<div class="wrap">' + head(w, "work") + prose(w.text, "prose--offset") +
-      '<ul class="showcase" role="list">' + w.items.map(function (it) {
-        return '<li class="reveal"><div class="film">' + picture(it.image, it.alt, "(max-width: 1023px) 46vw, 30vw") + "</div></li>";
-      }).join("") + "</ul>" + closing(w.closing, "closing--center") + "</div>");
+      (w.image ? '<figure class="work-frame"><div class="film"><div class="work-zoom">' + picture(w.image, w.imageAlt, "(max-width: 1300px) 92vw, 1240px") + "</div></div></figure>" : "") +
+      closing(w.closing, "closing--center") + "</div>");
 
     var p = C.process;
-    fill("process", '<div class="wrap">' + head(p, "process") + prose(p.text, "prose--offset") +
+    fill("process", split(head(p, "process") + prose(p.text),
       '<ol class="steps" role="list">' + p.steps.map(function (s) {
-        return '<li class="step reveal">' + kicker(s.number, s.label) + "<h3>" + inline(s.title) + "</h3>" + paras(s.text) + "</li>";
-      }).join("") + "</ol></div>");
+        return '<li class="step">' + kicker(s.number, s.label) + "<h3>" + inline(s.title) + "</h3>" + paras(s.text) + "</li>";
+      }).join("") + "</ol>"));
 
     var t = C.time;
     fill("time", '<div class="wrap">' + head(t, "time") + prose(t.text, "prose--offset") +
-      '<ul class="tasks reveal" role="list">' + listItems(t.tasks) + "</ul>" +
-      (t.tasksAfter ? '<p class="tasks-after reveal">' + inline(t.tasksAfter) + "</p>" : "") +
-      '<div class="time-highlight reveal"><p class="highlight">' + inline(t.highlight) + "</p><p>" + inline(t.highlightText) + "</p></div>" +
-      '<ol class="benefits" role="list">' + t.items.map(function (it, i) {
-        return '<li class="benefit reveal"><span class="num" aria-hidden="true">' + pad(i + 1) + "</span><h3>" + inline(it.title) + "</h3><div>" + paras(it.text) + "</div></li>";
-      }).join("") + "</ol>" +
-      (t.result ? '<div class="result reveal"><p class="result-kicker">' + inline(t.result.kicker) + '</p><ul role="list">' + listItems(t.result.lines) + "</ul></div>" : "") +
-      closing(t.closing, "closing--center") + "</div>");
+        focusList(t.tasks, "tasks") +
+        (t.tasksAfter ? '<p class="tasks-after">' + inline(t.tasksAfter) + "</p>" : "") + "</div>" +
+      split('<div class="time-highlight"><p class="highlight">' + inline(t.highlight) + "</p><p>" + inline(t.highlightText) + "</p></div>",
+        '<ol class="benefits" role="list">' + t.items.map(function (it, i) {
+          return '<li class="benefit"><span class="num" aria-hidden="true">' + pad(i + 1) + "</span><h3>" + inline(it.title) + "</h3><div>" + paras(it.text) + "</div></li>";
+        }).join("") + "</ol>", "split--time") +
+      '<div class="wrap">' +
+        (t.result ? '<div class="result"><p class="result-kicker">' + inline(t.result.kicker) + "</p>" + focusList(t.result.lines, "result-lines") + "</div>" : "") +
+        closing(t.closing, "closing--center") + "</div>");
 
     var v = C.value;
-    fill("value", '<div class="wrap">' + head(v, "value") + prose(v.text, "prose--offset") +
+    fill("value", split(head(v, "value") + prose(v.text),
       '<ul class="values" role="list">' + v.items.map(function (it) {
-        return '<li class="reveal"><h3>' + inline(it.title) + "</h3><p>" + inline(it.text) + "</p></li>";
-      }).join("") + "</ul></div>");
+        return "<li><h3>" + inline(it.title) + "</h3><p>" + inline(it.text) + "</p></li>";
+      }).join("") + "</ul>"));
 
     var c = C.contact, f = c.fields;
     var mailto = !c.formEndpoint;
@@ -212,11 +214,11 @@
         (required ? "" : ' <span class="optional">' + esc(UI.optional) + "</span>") + "</label>" + input + "</div>";
     }
     fill("contact", '<div class="wrap contact-grid"><div class="contact-intro">' + head(c, "contact") + prose(c.text) +
-        '<dl class="contact-details reveal">' +
+        '<dl class="contact-details">' +
           "<div><dt>" + esc(UI.emailLabel) + '</dt><dd><a class="text-link" href="mailto:' + esc(c.email) + '">' + esc(c.email) + "</a></dd></div>" +
           "<div><dt>" + esc(UI.basedInLabel) + "</dt><dd>" + esc(c.location) + "</dd></div>" +
         "</dl></div>" +
-      '<form class="form reveal" novalidate aria-labelledby="contact-title">' +
+      '<form class="form" novalidate aria-labelledby="contact-title">' +
         field("name", "text", false, true, ' autocomplete="name"') +
         field("business", "text", false, false, ' autocomplete="organization"') +
         field("email", "email", false, true, ' autocomplete="email" inputmode="email"') +
@@ -767,16 +769,102 @@
     $$("main > section[id]").forEach(function (s) { io.observe(s); });
   }
   /* ---------- section reveals ---------- */
+  // Each section arrives in reading order: eyebrow, then the title line by
+  // line, then the text, then the details. Cards rise in with a slight tilt.
+  // Nothing moves again once it has arrived.
+  var REVEAL = [
+    [".section .head .eyebrow, .section .head .line, .section .prose > p, .intro-aside .highlight, .intro-aside .actions," +
+     " .closing .line, .tasks-after, .time-highlight > p, .focus-list, .work-frame, .contact-details, .form .field, .form-foot", "rv"],
+    [".pillar, .step, .benefit, .values > li", "rv rv-3d"],
+    [".codes span", "rv rv-flip"]
+  ];
   function setupReveals() {
-    var els = $$(".reveal");
-    if (!root.classList.contains("motion") || !("IntersectionObserver" in window)) {
-      els.forEach(function (el) { el.classList.add("is-in"); });
-      return;
-    }
+    if (!root.classList.contains("motion") || !("IntersectionObserver" in window)) return;
+    var els = [];
+    REVEAL.forEach(function (g) {
+      $$(g[0]).forEach(function (el) { el.className += " " + g[1]; els.push(el); });
+    });
     var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add("is-in"); io.unobserve(en.target); } });
-    }, { rootMargin: "0px 0px -10% 0px" });
+      var arriving = [];
+      entries.forEach(function (en) {
+        if (en.isIntersecting) arriving.push(en.target);
+        else if (en.boundingClientRect.bottom < 0) show(en.target, 0); // already scrolled past: no animation
+      });
+      arriving.sort(function (a, b) { return a.compareDocumentPosition(b) & 4 ? -1 : 1; });
+      arriving.forEach(function (el, i) { show(el, Math.min(i * 110, 990)); });
+    }, { rootMargin: "0px 0px -8% 0px" });
+    function show(el, delay) {
+      el.style.setProperty("--d", delay + "ms");
+      el.classList.add("is-in");
+      io.unobserve(el);
+    }
     els.forEach(function (el) { io.observe(el); });
+  }
+
+  /* ---------- scroll-linked details ---------- */
+  // Stacked cards, lines that light up in turn, the result band settling and
+  // the camera frame easing in. All read the scroll position only; none of
+  // them changes how far or how fast the page scrolls.
+  function setupScrollFx() {
+    var motion = root.classList.contains("motion");
+    var pillars = $(".pillars"), cards = pillars ? $$(".pillar", pillars) : [];
+    var asides = $$(".split-aside"), lists = $$(".focus-list");
+    var result = $(".result"), zoom = $(".work-zoom");
+    var queued = false;
+
+    function room() {
+      var hd = $(".site-header");
+      return window.innerHeight - (hd ? hd.getBoundingClientRect().height : 0) - 48;
+    }
+    // Stick only what fits on screen; anything taller simply scrolls, so no text is ever hidden.
+    function layout() {
+      var r = room();
+      if (pillars) {
+        cards.forEach(function (c, i) { c.style.setProperty("--i", i); });
+        var fits = cards.every(function (c) { return c.firstElementChild.offsetHeight + cards.length * 14 < r; });
+        pillars.classList.toggle("is-stacked", fits);
+        if (!fits) cards.forEach(function (c) { c.firstElementChild.style.removeProperty("--cover"); });
+      }
+      asides.forEach(function (a) { a.classList.toggle("no-stick", a.offsetHeight > r - 24); });
+      update();
+    }
+    function update() {
+      queued = false;
+      if (!motion) return;
+      var vh = window.innerHeight;
+      if (pillars && pillars.classList.contains("is-stacked")) {
+        cards.forEach(function (c, i) {
+          var next = cards[i + 1], p = 0;
+          if (next) {
+            var a = c.getBoundingClientRect(), b = next.getBoundingClientRect();
+            p = clamp((a.bottom - b.top) / a.height, 0, 1);
+          }
+          c.firstElementChild.style.setProperty("--cover", p.toFixed(3));
+        });
+      }
+      lists.forEach(function (l) {
+        var r = l.getBoundingClientRect(), items = l.children, n = items.length;
+        if (r.bottom < -vh || r.top > 2 * vh) return;
+        // 0 as the list's top reaches 85% of the screen, 1 as its bottom passes 50%
+        var p = clamp((vh * 0.85 - r.top) / (r.height + vh * 0.35), 0, 1);
+        for (var i = 0; i < n; i++) items[i].style.setProperty("--lit", clamp(p * n - i, 0, 1).toFixed(3));
+      });
+      if (result) {
+        var rr = result.getBoundingClientRect();
+        result.style.setProperty("--rise", clamp((rr.top - vh * 0.55) / (vh * 0.45), 0, 1).toFixed(3));
+      }
+      if (zoom) {
+        var zr = zoom.getBoundingClientRect();
+        zoom.style.setProperty("--zoom", (1.12 - 0.12 * clamp((vh - zr.top) / (vh + zr.height * 0.5), 0, 1)).toFixed(4));
+      }
+    }
+    function queue() { if (!queued) { queued = true; requestAnimationFrame(update); } }
+    if (motion) root.classList.add("fx");
+    window.addEventListener("scroll", queue, { passive: true });
+    window.addEventListener("resize", layout);
+    window.addEventListener("load", layout);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+    layout();
   }
 
   renderHeader();
@@ -788,4 +876,5 @@
   setupAnchors();
   setupActiveNav();
   setupReveals();
+  setupScrollFx();
 })();

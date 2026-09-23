@@ -5,7 +5,7 @@
 
 ## Assumptions (replace when confirmed)
 - **Copy:** all section copy is the client's own Greek text (supplied 2026-09-23): a weekly social-media content service for businesses on the Greek islands, main action "Ξεκινήστε μαζί μας". Email hello@tapesway.gr, based in Mykonos, Greece. Interface wording the copy did not cover (menu and accessibility labels, form messages, image descriptions, the "Έδρα" label) was written to match and lives in `content.js` under `ui`.
-- **Examples section:** the copy marks it `[PORTFOLIO / WORK SHOWCASE]`. Until real project work exists it shows frames from the supplied film, uncaptioned, with no claim that they are client work.
+- **Examples section:** the copy marks it `[PORTFOLIO / WORK SHOWCASE]`. Until real project work exists it shows one frame, the camera from the supplied film. At the client's request (2026-09-23) no other stills from the film appear in the sections.
 - **No invented credibility:** the site has no clients, testimonials, prices, counts or awards.
 - **Contact form:** it opens the visitor's email app with the details filled in, and says so on the page. Setting `contact.formEndpoint` in `content.js` to a form service sends submissions directly. The page shows success only when that service answers OK.
 

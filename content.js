@@ -207,9 +207,7 @@ window.TAPESWAY_CONTENT = {
       "Τι θα τον κάνει να μιλήσει γι’ αυτό;",
       "Τι θα τον κάνει να θέλει να επιστρέψει;"
     ],
-    closing: "Εκεί βρίσκεται το περιεχόμενο που αξίζει να δημιουργηθεί.",
-    image: "media/stills/oia",
-    imageAlt: "Η φωτογραφική μηχανή σε λευκή βεράντα, με την Οία και την καλντέρα στο σούρουπο."
+    closing: "Εκεί βρίσκεται το περιεχόμενο που αξίζει να δημιουργηθεί."
   },
 
   // Section 03
@@ -235,18 +233,13 @@ window.TAPESWAY_CONTENT = {
       "Η δουλειά μας είναι να το ανακαλύψουμε και να το μετατρέψουμε σε περιεχόμενο που αξίζει να δει ο κόσμος."
     ],
     /*
-      PLACEHOLDER: the showcase uses frames from the film at the top of this
-      page until real project work is added. Add or remove items freely;
-      "image" is a picture path, "alt" describes it for screen readers.
+      PLACEHOLDER: until real project photos exist, this section shows one
+      frame: the camera from the film. Replace "image" with a picture path
+      (a name like "media/stills/open" uses its -800/-1600 versions; a full
+      file name such as "work/villa.webp" is used as-is).
     */
-    items: [
-      { image: "media/stills/open-1600.webp", alt: "Φωτογραφική μηχανή σε λευκή βεράντα στο ηλιοβασίλεμα." },
-      { image: "media/stills/frame-terrace.webp", alt: "Βεράντα εστιατορίου με στρωμένα τραπέζια κάτω από βουκαμβίλιες." },
-      { image: "media/stills/frame-bloom.webp", alt: "Βουκαμβίλιες πάνω από τη θάλασσα." },
-      { image: "media/stills/frame-room.webp", alt: "Ζεστή τραπεζαρία με αμφορέα και κεριά." },
-      { image: "media/stills/frame-sea.webp", alt: "Η καλντέρα και το Αιγαίο το απόγευμα." },
-      { image: "media/stills/oia-1600.webp", alt: "Η Οία στο σούρουπο, πίσω από τη φωτογραφική μηχανή." }
-    ],
+    image: "media/stills/open",
+    imageAlt: "Μια vintage φωτογραφική μηχανή σε λευκή βεράντα στο ηλιοβασίλεμα, με θέα τη θάλασσα.",
     closing: ["Η δική σας επιχείρηση έχει τη δική της ιστορία.", "Εμείς φροντίζουμε να ειπωθεί σωστά."]
   },
 

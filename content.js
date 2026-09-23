@@ -51,7 +51,7 @@ window.TAPESWAY_CONTENT = {
     formError: "Το μήνυμα δεν στάλθηκε. Γράψτε μας απευθείας στο {email}.",
     mailtoNote: "Το κουμπί ανοίγει την εφαρμογή email σας με το μήνυμα έτοιμο προς αποστολή.",
     mailtoOpened: "Θα πρέπει να άνοιξε η εφαρμογή email σας με το μήνυμα έτοιμο. Πατήστε αποστολή εκεί για να σταλεί. Αν δεν άνοιξε, γράψτε μας στο {email}.",
-    mailSubject: "Νέο μήνυμα από το tapesway.gr"
+    mailSubject: "Νέο μήνυμα από το tapesway.com"
   },
 
   /*
@@ -363,7 +363,7 @@ window.TAPESWAY_CONTENT = {
       "Θα γνωρίσουμε την επιχείρησή σας, θα κατανοήσουμε τι την κάνει ξεχωριστή και θα σας παρουσιάσουμε μια ξεκάθαρη πρόταση για το πώς μπορούμε να αναδείξουμε την παρουσία της online.",
       "Χωρίς περίπλοκες διαδικασίες.\nΧωρίς δεσμεύσεις."
     ],
-    email: "hello@tapesway.gr",
+    email: "hello@tapesway.com",
     location: "Mykonos, Greece",
     /*
       Leave formEndpoint empty to have the form open the visitor's email app

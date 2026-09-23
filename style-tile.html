@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>TapesWay Style Tile</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Board layout only. Every colour, font, button and card below comes from styles.css. */
+    body { background: var(--paper); }
+    .tile { max-width: 1240px; margin: 0 auto; padding: 56px var(--gutter) 96px; }
+    .tile-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 16px; border-bottom: 1px solid var(--ink); padding-bottom: 24px; }
+    .tile-head h1 { font-size: clamp(40px, 6vw, 80px); }
+    .tile-head p { color: var(--muted); max-width: 44ch; }
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; margin-top: 32px; }
+    .panel { grid-column: span 6; background: var(--cream); border: 1px solid var(--line); border-radius: var(--radius); padding: 28px; }
+    .panel.wide { grid-column: span 12; }
+    .panel.dark { background: var(--ink); color: var(--cream); border-color: transparent; }
+    .panel h2 { font-size: 13px; font-family: var(--font-mono); font-weight: 400; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+    .panel.dark h2 { color: var(--brass); }
+    @media (max-width: 899px) { .panel { grid-column: span 12; } }
+    .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+    .sw { border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); background: var(--paper); }
+    .sw i { display: block; height: 84px; }
+    .sw div { padding: 10px 12px; font-size: 13px; line-height: 1.35; }
+    .sw b { display: block; font-weight: 600; }
+    .sw code { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+    .type-d { font-family: var(--font-display); font-weight: 380; font-variation-settings: "opsz" 144, "SOFT" 60; font-size: clamp(44px, 6vw, 84px); line-height: 1; letter-spacing: -0.015em; }
+    .type-d em { color: var(--bloom); }
+    .type-meta { margin-top: 14px; font-family: var(--font-mono); font-size: 12px; color: var(--muted); letter-spacing: .06em; }
+    .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .logos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .logos figure { margin: 0; background: #F6EFE4; border: 1px solid var(--line); border-radius: var(--radius); }
+    .logos img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #F6EFE4; }
+    .logos figcaption { padding: 12px 14px; font-size: 14px; border-top: 1px solid var(--line); }
+    .logos figcaption b { display: block; }
+    .logos figcaption span { color: var(--muted); font-size: 13px; }
+    @media (max-width: 899px) { .logos { grid-template-columns: 1fr; } }
+    .standin { display: flex; align-items: center; gap: 16px; margin-top: 20px; padding: 16px; background: var(--ink); border-radius: var(--radius); color: var(--cream); }
+    .standin img { width: 44px; height: 44px; }
+    .standin span { font-family: var(--font-display); font-size: 30px; }
+    .imagery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .imagery p { margin-top: 10px; font-size: 14px; color: var(--muted-dark); }
+    @media (max-width: 899px) { .imagery { grid-template-columns: 1fr; } }
+    .card-demo { max-width: 380px; }
+  </style>
+</head>
+<body>
+  <main class="tile">
+    <header class="tile-head">
+      <div>
+        <span class="eyebrow">TapesWay · Style tile · Draft 1</span>
+        <h1>Golden hour, on film.</h1>
+      </div>
+      <p>Direction: a darkroom and a white terrace at sunset. Ink and cream do the work; brass is the light on the film edge; bougainvillea is the one warm accent, used sparingly.</p>
+    </header>
+
+    <div class="grid">
+      <section class="panel wide">
+        <h2>Logo concepts (Higgsfield · Recraft V4.1 vector)</h2>
+        <div class="logos">
+          <figure>
+            <img src="https://d8j0ntlcm91z4.cloudfront.net/user_3JjRrVOosJEDJrj0jQqr3e9NdEA/hf_20260923_193320_20add5e3-f5e6-4f75-9d94-260bfa0f7370.svg" alt="Concept A: aperture blades forming a film reel, with a serif TapesWay wordmark." loading="lazy">
+            <figcaption><b>A · Aperture reel</b><span>Lens aperture that doubles as a film reel, high-contrast serif wordmark.</span></figcaption>
+          </figure>
+          <figure>
+            <img src="https://d8j0ntlcm91z4.cloudfront.net/user_3JjRrVOosJEDJrj0jQqr3e9NdEA/hf_20260923_193321_9078dad5-7f81-4f4f-8fec-660cafee81fb.svg" alt="Concept B: a strip of film curving like a cliffside path, with a spaced sans-serif wordmark." loading="lazy">
+            <figcaption><b>B · Film path</b><span>Film strip bending like a caldera path, spaced geometric capitals.</span></figcaption>
+          </figure>
+          <figure>
+            <img src="https://d8j0ntlcm91z4.cloudfront.net/user_3JjRrVOosJEDJrj0jQqr3e9NdEA/hf_20260923_193320_aa1b6fdc-bb10-427f-9ded-8fba89e218c6.svg" alt="Concept C: viewfinder brackets around a setting sun on the horizon, with a serif wordmark." loading="lazy">
+            <figcaption><b>C · Sunset frame</b><span>Viewfinder corners around a setting sun, refined serif wordmark.</span></figcaption>
+          </figure>
+        </div>
+        <div class="standin"><img src="brand/symbol-standin.svg" alt=""><span>TapesWay</span><small style="margin-left:auto;font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;color:var(--brass)">STAND-IN MARK USED ON THE SITE UNTIL A CONCEPT IS CHOSEN</small></div>
+      </section>
+
+      <section class="panel">
+        <h2>Palette</h2>
+        <div class="swatches">
+          <div class="sw"><i style="background:var(--ink)"></i><div><b>Ink</b><code>#141215</code><br>Camera body, header, text</div></div>
+          <div class="sw"><i style="background:var(--cream)"></i><div><b>Whitewash</b><code>#F6EFE4</code><br>Cards, prints</div></div>
+          <div class="sw"><i style="background:var(--paper)"></i><div><b>Paper</b><code>#FBF8F2</code><br>Page ground</div></div>
+          <div class="sw"><i style="background:var(--brass)"></i><div><b>Brass</b><code>#C79A5B</code><br>Film-edge light, labels on dark</div></div>
+          <div class="sw"><i style="background:var(--bloom)"></i><div><b>Bougainvillea</b><code>#C8246C</code><br>Accent, focus, numerals</div></div>
+          <div class="sw"><i style="background:var(--aegean)"></i><div><b>Aegean</b><code>#1E3A4C</code><br>Reserve, for imagery</div></div>
+          <div class="sw"><i style="background:var(--plum)"></i><div><b>Lens plum</b><code>#2A1621</code><br>Hover on dark</div></div>
+          <div class="sw"><i style="background:var(--terracotta)"></i><div><b>Amphora</b><code>#B4552F</code><br>Reserve, for imagery</div></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Typography</h2>
+        <div class="type-d">Every place has a <em>golden</em> hour.</div>
+        <p class="type-meta">Display · Fraunces (variable, opsz 144, soft 60), 380</p>
+        <p style="margin-top:22px;font-size:18px;max-width:46ch">We photograph and film hotels, restaurants and villas across the Cyclades, so guests fall for the place before they book.</p>
+        <p class="type-meta">Body · Inter Tight (variable), 400 / 600, 17px / 1.55</p>
+        <p style="margin-top:22px"><span class="eyebrow">01 / 03 · Frame labels</span></p>
+        <p class="type-meta">Labels · IBM Plex Mono 400, 12px, tracked 0.14em, upper case</p>
+      </section>
+
+      <section class="panel">
+        <h2>Buttons &amp; links</h2>
+        <div class="row">
+          <a class="btn btn--primary" href="#">Book a shoot <span class="arrow" aria-hidden="true">→</span></a>
+          <a class="btn btn--ghost" href="#">What we make</a>
+        </div>
+        <p style="margin-top:22px">Inline link: write to <a class="text-link" href="#">hello@tapesway.example</a> or read <a href="#">how a shoot works</a>.</p>
+      </section>
+
+      <section class="panel dark on-dark">
+        <h2>On dark</h2>
+        <div class="row">
+          <a class="btn btn--light" href="#">Book a shoot <span class="arrow" aria-hidden="true">→</span></a>
+          <a class="btn btn--ghost" href="#">What we deliver</a>
+        </div>
+        <p style="margin-top:22px;color:var(--muted-dark)">Captions on the film strip sit in the dark below it, cream on ink, with a brass frame index.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Service card</h2>
+        <article class="card card-demo">
+          <div class="film"><img src="media/stills/frame-terrace.webp" alt="Terrace tables under bougainvillea."></div>
+          <h3>Photography</h3>
+          <p>Rooms, terraces, tables and details, shot through golden and blue hour.</p>
+          <ul><li>Edited stills for web and booking platforms</li><li>Print-resolution masters</li></ul>
+        </article>
+      </section>
+
+      <section class="panel dark on-dark">
+        <h2>Imagery direction</h2>
+        <div class="imagery">
+          <div><div class="film"><img src="media/stills/frame-bloom.webp" alt="Bougainvillea over the sea."></div><p>Low sun, warm whites, deep blue sea. Colour stays true; no heavy grading.</p></div>
+          <div><div class="film"><img src="media/stills/frame-room.webp" alt="Candlelit dining room."></div><p>Interiors in tungsten warmth; amphora terracotta is the only strong earth tone.</p></div>
+          <div><div class="film"><img src="media/stills/frame-sea.webp" alt="Caldera cliffs over the sea."></div><p>Frames are presented as film: sprocket edges, ink borders, mono captions.</p></div>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

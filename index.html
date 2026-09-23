@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>TapesWay · Photo & film for island hospitality</title>
+  <meta name="description" content="TapesWay photographs and films hotels, restaurants and villas across the Cyclades.">
+  <meta name="theme-color" content="#141215">
+  <link rel="icon" href="brand/symbol-standin.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/fraunces-latin-full-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <script>
+    // Decide, before anything paints, whether the scroll animation should run.
+    (function () {
+      var d = document.documentElement;
+      var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var c = navigator.connection || {};
+      var constrained = c.saveData === true || /(^|-)2g$/.test(c.effectiveType || "");
+      var query = new URLSearchParams(location.search);
+      if (query.get("motion") === "off") reduce = true;
+      d.classList.add("js");
+      d.classList.add(reduce || constrained ? "no-motion" : "motion");
+    })();
+  </script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- Fixed header lives outside the story so it never scrolls away with it. -->
+  <header class="site-header" data-render="header"></header>
+  <div class="menu" id="site-menu" data-render="menu" hidden></div>
+
+  <main id="main">
+    <section id="story" class="story" aria-label="The TapesWay story" data-render="story">
+      <noscript>
+        <div class="story-noscript">
+          <img src="media/stills/open-1600.webp" alt="A vintage folding camera on a white terrace at sunset, facing the sea.">
+          <h1>TapesWay: photo & film for island hospitality.</h1>
+        </div>
+      </noscript>
+    </section>
+    <section id="services" class="section section--services" data-render="services"></section>
+    <section id="sheet" class="section section--sheet" data-render="contactSheet"></section>
+    <section id="process" class="section section--process" data-render="process"></section>
+    <section id="contact" class="section section--contact" data-render="contact"></section>
+  </main>
+
+  <footer class="site-footer" data-render="footer"></footer>
+
+  <script src="content.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

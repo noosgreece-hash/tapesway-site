@@ -39,7 +39,7 @@
 
   --font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   --font-body: "Inter Tight", "Helvetica Neue", Arial, system-ui, sans-serif;
-  --font-mono: "Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-mono: "Plex Mono", "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 
   --header-h: 64px;
   --gutter: clamp(16px, 5vw, 80px);

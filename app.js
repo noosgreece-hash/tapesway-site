@@ -40,32 +40,44 @@
   }
 
   /* ---------- render ---------- */
+  var UI = C.ui;
+  function navLinks() {
+    return C.nav.map(function (n) { return '<a href="' + esc(n.href) + '">' + esc(n.label) + "</a>"; }).join("");
+  }
   function renderHeader() {
-    var links = C.nav.map(function (n) { return '<a href="' + esc(n.href) + '">' + esc(n.label) + "</a>"; }).join("");
+    // Tab title and search description also come from content.js.
+    if (C.meta) {
+      if (C.meta.title) document.title = C.meta.title;
+      var md = $('meta[name="description"]');
+      if (md && C.meta.description) md.setAttribute("content", C.meta.description);
+    }
+    var story = $("#story");
+    if (story && UI.storyLabel) story.setAttribute("aria-label", UI.storyLabel);
+    var skip = $(".skip-link");
+    if (skip && UI.skipToContent) skip.textContent = UI.skipToContent;
     $('[data-render="header"]').innerHTML =
-      brandLink('aria-label="' + esc(C.brand.name) + ', back to top"') +
-      '<nav class="site-nav" aria-label="Main">' + links + btn(C.navCta, "btn--light") + "</nav>" +
-      '<button class="menu-button" type="button" aria-expanded="false" aria-controls="site-menu" aria-label="Open menu">' + ICON_MENU + "</button>";
+      brandLink('aria-label="' + esc(UI.homeLabel) + '"') +
+      '<nav class="site-nav" aria-label="' + esc(UI.mainNav) + '">' + navLinks() + btn(C.navCta, "btn--light") + "</nav>" +
+      '<button class="menu-button" type="button" aria-expanded="false" aria-controls="site-menu" aria-label="' + esc(UI.openMenu) + '">' + ICON_MENU + "</button>";
 
     var items = C.nav.map(function (n, i) {
-      return '<li><a href="' + esc(n.href) + '">' + esc(n.label) + '<span class="num">0' + (i + 1) + "</span></a></li>";
+      return '<li><a href="' + esc(n.href) + '">' + esc(n.label) + '<span class="num" aria-hidden="true">' + pad(i + 1) + "</span></a></li>";
     }).join("");
     var menu = $('[data-render="menu"]');
     menu.setAttribute("role", "dialog");
     menu.setAttribute("aria-modal", "true");
-    menu.setAttribute("aria-label", "Menu");
+    menu.setAttribute("aria-label", UI.menu);
     menu.innerHTML =
       '<div class="menu-top">' + brandLink('tabindex="-1" aria-hidden="true"') +
-      '<button class="menu-close" type="button" aria-label="Close menu">' + ICON_CLOSE + "</button></div>" +
-      "<nav aria-label=\"Menu\"><ul>" + items + "</ul></nav>" +
+      '<button class="menu-close" type="button" aria-label="' + esc(UI.closeMenu) + '">' + ICON_CLOSE + "</button></div>" +
+      '<nav aria-label="' + esc(UI.mainNav) + '"><ul>' + items + "</ul></nav>" +
       btn(C.navCta, "btn--light") +
-      '<p class="menu-foot">' + esc(C.contact.location) + "</p>";
+      '<p class="menu-foot"><a href="mailto:' + esc(C.contact.email) + '">' + esc(C.contact.email) + "</a><span>" + esc(C.contact.location) + "</span></p>";
   }
 
   function renderStory() {
     var S = C.story, st = C.media.stills;
     $('[data-render="story"]').innerHTML =
-      '<h1 class="sr-only">' + esc(C.brand.name) + "</h1>" +
       '<div class="story-track">' +
         '<div class="story-stage">' +
           '<picture class="story-poster">' +
@@ -96,61 +108,133 @@
       esc(tt.text) + "</text></svg></div></div>";
   }
 
-  function sectionHead(o) {
-    return '<div class="section-head reveal"><div>' + eyebrow(o.eyebrow) + "<h2>" + esc(o.title) + "</h2></div>" +
-      (o.intro ? "<p>" + esc(o.intro) + "</p>" : "<div></div>") + "</div>";
+  /* ---------- page sections ---------- */
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  // Escape, then allow **bold** and "\n" line breaks written in content.js.
+  function inline(s) {
+    return esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>");
+  }
+  function paras(list) {
+    return (list || []).map(function (p) { return "<p>" + inline(p) + "</p>"; }).join("");
+  }
+  function listItems(list) {
+    return (list || []).map(function (t) { return "<li>" + inline(t) + "</li>"; }).join("");
+  }
+  // A title can be one line or a list of lines; each line starts on its own.
+  function titleLines(t) {
+    return (Array.isArray(t) ? t : [t]).map(function (l) { return '<span class="line">' + inline(l) + "</span>"; }).join(" ");
+  }
+  function head(o, id, tag) {
+    tag = tag || "h2";
+    return '<div class="head reveal">' + eyebrow(o.eyebrow) + "<" + tag + ' id="' + id + '-title">' + titleLines(o.title) + "</" + tag + "></div>";
+  }
+  function prose(list, extra) {
+    return list && list.length ? '<div class="prose reveal' + (extra ? " " + extra : "") + '">' + paras(list) + "</div>" : "";
+  }
+  function kicker(number, label) {
+    return '<div class="kicker"><span class="num" aria-hidden="true">' + esc(number) + '</span><span class="tag">' + esc(label) + "</span></div>";
+  }
+  function closing(lines, extra) {
+    return lines ? '<p class="closing reveal' + (extra ? " " + extra : "") + '">' + titleLines(lines) + "</p>" : "";
+  }
+  function fill(name, html) {
+    var el = $('[data-render="' + name + '"]');
+    if (el) el.innerHTML = html;
   }
 
   function renderSections() {
-    var s = C.services;
-    $('[data-render="services"]').innerHTML = '<div class="wrap">' + sectionHead(s) +
-      '<div class="cards">' + s.items.map(function (it) {
-        return '<article class="card reveal"><div class="film">' + picture(it.image, it.imageAlt, "(max-width: 899px) 92vw, 30vw") + "</div>" +
-          "<h3>" + esc(it.title) + "</h3><p>" + esc(it.text) + "</p><ul>" +
-          it.points.map(function (p) { return "<li>" + esc(p) + "</li>"; }).join("") + "</ul></article>";
-      }).join("") + "</div></div>";
+    var h = C.hero;
+    fill("intro", '<div class="wrap">' + head(h, "intro", "h1").replace('class="head', 'class="head head--hero') +
+      '<div class="intro-body">' + prose(h.text) +
+        '<div class="intro-aside reveal">' + (h.highlight ? '<p class="highlight">' + inline(h.highlight) + "</p>" : "") +
+          '<div class="actions">' + h.actions.map(function (a) { return btn(a, "btn--" + (a.style || "primary")); }).join("") + "</div>" +
+        "</div>" +
+      "</div></div>");
 
-    var cs = C.contactSheet, sheet = $('[data-render="contactSheet"]');
-    sheet.classList.add("on-dark");
-    sheet.innerHTML = '<div class="wrap">' + sectionHead(cs) + '<div class="sheet">' +
-      cs.items.map(function (it, i) {
-        return '<figure class="reveal"><div class="film">' + picture(it.image, it.alt, "(max-width: 899px) 46vw, 23vw") + "</div>" +
-          "<figcaption><span>" + esc(it.caption) + "</span><b>" + String(i + 1).padStart(2, "0") + "A</b></figcaption></figure>";
-      }).join("") + "</div></div>";
+    var o = C.offer;
+    fill("offer", '<div class="wrap">' + head(o, "offer") + prose(o.text, "prose--offset") +
+      '<ol class="pillars" role="list">' + o.items.map(function (it) {
+        return '<li class="pillar reveal">' + kicker(it.number, it.label) + "<h3>" + inline(it.title) + "</h3>" + paras(it.text) + "</li>";
+      }).join("") + "</ol></div>");
+
+    var a = C.approach;
+    fill("approach", '<div class="wrap">' + head(a, "approach") +
+      '<div class="approach-grid"><div class="approach-copy">' +
+        '<ul class="statements reveal" role="list">' + listItems(a.statements) + "</ul>" +
+        prose(a.text) +
+        '<ul class="questions reveal" role="list">' + listItems(a.questions) + "</ul>" +
+        closing(a.closing) +
+      "</div>" +
+      (a.image ? '<figure class="approach-image reveal"><div class="film">' + picture(a.image, a.imageAlt, "(max-width: 899px) 92vw, 40vw") + "</div></figure>" : "") +
+      "</div></div>");
+
+    var l = C.languages;
+    fill("languages", '<div class="wrap lang-grid"><div>' + head(l, "languages") + prose(l.text) + closing(l.closing) + "</div>" +
+      '<p class="codes reveal" aria-hidden="true">' + (l.codes || []).map(function (c) { return "<span>" + esc(c) + "</span>"; }).join("") + "</p></div>");
+
+    var w = C.work;
+    fill("work", '<div class="wrap">' + head(w, "work") + prose(w.text, "prose--offset") +
+      '<ul class="showcase" role="list">' + w.items.map(function (it) {
+        return '<li class="reveal"><div class="film">' + picture(it.image, it.alt, "(max-width: 1023px) 46vw, 30vw") + "</div></li>";
+      }).join("") + "</ul>" + closing(w.closing, "closing--center") + "</div>");
 
     var p = C.process;
-    $('[data-render="process"]').innerHTML = '<div class="wrap">' + sectionHead(p) + '<ol class="steps" role="list">' +
-      p.steps.map(function (st, i) {
-        return '<li class="step reveal"><span class="num" aria-hidden="true">0' + (i + 1) + "</span><h3>" + esc(st.label) + "</h3><p>" + esc(st.text) + "</p></li>";
-      }).join("") + "</ol>" + (p.note ? '<p class="process-note">' + esc(p.note) + "</p>" : "") + "</div>";
+    fill("process", '<div class="wrap">' + head(p, "process") + prose(p.text, "prose--offset") +
+      '<ol class="steps" role="list">' + p.steps.map(function (s) {
+        return '<li class="step reveal">' + kicker(s.number, s.label) + "<h3>" + inline(s.title) + "</h3>" + paras(s.text) + "</li>";
+      }).join("") + "</ol></div>");
+
+    var t = C.time;
+    fill("time", '<div class="wrap">' + head(t, "time") + prose(t.text, "prose--offset") +
+      '<ul class="tasks reveal" role="list">' + listItems(t.tasks) + "</ul>" +
+      (t.tasksAfter ? '<p class="tasks-after reveal">' + inline(t.tasksAfter) + "</p>" : "") +
+      '<div class="time-highlight reveal"><p class="highlight">' + inline(t.highlight) + "</p><p>" + inline(t.highlightText) + "</p></div>" +
+      '<ol class="benefits" role="list">' + t.items.map(function (it, i) {
+        return '<li class="benefit reveal"><span class="num" aria-hidden="true">' + pad(i + 1) + "</span><h3>" + inline(it.title) + "</h3><div>" + paras(it.text) + "</div></li>";
+      }).join("") + "</ol>" +
+      (t.result ? '<div class="result reveal"><p class="result-kicker">' + inline(t.result.kicker) + '</p><ul role="list">' + listItems(t.result.lines) + "</ul></div>" : "") +
+      closing(t.closing, "closing--center") + "</div>");
+
+    var v = C.value;
+    fill("value", '<div class="wrap">' + head(v, "value") + prose(v.text, "prose--offset") +
+      '<ul class="values" role="list">' + v.items.map(function (it) {
+        return '<li class="reveal"><h3>' + inline(it.title) + "</h3><p>" + inline(it.text) + "</p></li>";
+      }).join("") + "</ul></div>");
 
     var c = C.contact, f = c.fields;
     var mailto = !c.formEndpoint;
-    function field(name, type, full, required, auto) {
+    function field(name, type, full, required, extra) {
       var id = "f-" + name;
       var input = type === "textarea"
-        ? '<textarea id="' + id + '" name="' + name + '"' + (required ? " required" : "") + "></textarea>"
-        : '<input id="' + id + '" name="' + name + '" type="' + type + '"' + (auto ? ' autocomplete="' + auto + '"' : "") + (required ? " required" : "") + ">";
-      return '<div class="field' + (full ? " field--full" : "") + '"><label for="' + id + '">' + esc(f[name]) + (required ? "" : ' <span style="font-weight:400;color:var(--muted)">(optional)</span>') + "</label>" + input + "</div>";
+        ? '<textarea id="' + id + '" name="' + name + '" rows="5"' + (extra || "") + (required ? " required" : "") + "></textarea>"
+        : '<input id="' + id + '" name="' + name + '" type="' + type + '"' + (extra || "") + (required ? " required" : "") + ">";
+      return '<div class="field' + (full ? " field--full" : "") + '"><label for="' + id + '">' + esc(f[name]) +
+        (required ? "" : ' <span class="optional">' + esc(UI.optional) + "</span>") + "</label>" + input + "</div>";
     }
-    $('[data-render="contact"]').innerHTML = '<div class="wrap contact-grid">' +
-      '<div class="reveal">' + eyebrow(c.eyebrow) + "<h2>" + esc(c.title) + "</h2><p>" + esc(c.text) + "</p>" +
-        '<div class="contact-details"><span>Email</span><a class="text-link" href="mailto:' + esc(c.email) + '">' + esc(c.email) + "</a>" +
-        "<span>Based in</span><div>" + esc(c.location) + "</div></div></div>" +
-      '<form class="form reveal" novalidate>' +
-        field("name", "text", false, true, "name") + field("venue", "text", false, false, "organization") +
-        field("email", "email", false, true, "email") + field("island", "text", false, false) +
-        field("when", "text", true, false) + field("message", "textarea", true, true) +
-        '<div class="form-foot"><button class="btn btn--primary" type="submit">' + esc(mailto ? c.mailtoSubmitLabel : c.submitLabel) + " " + ARROW + "</button>" +
-        (mailto ? '<p class="form-note">' + esc(c.mailtoNote) + "</p>" : "") + "</div>" +
+    fill("contact", '<div class="wrap contact-grid"><div class="contact-intro">' + head(c, "contact") + prose(c.text) +
+        '<dl class="contact-details reveal">' +
+          "<div><dt>" + esc(UI.emailLabel) + '</dt><dd><a class="text-link" href="mailto:' + esc(c.email) + '">' + esc(c.email) + "</a></dd></div>" +
+          "<div><dt>" + esc(UI.basedInLabel) + "</dt><dd>" + esc(c.location) + "</dd></div>" +
+        "</dl></div>" +
+      '<form class="form reveal" novalidate aria-labelledby="contact-title">' +
+        field("name", "text", false, true, ' autocomplete="name"') +
+        field("business", "text", false, false, ' autocomplete="organization"') +
+        field("email", "email", false, true, ' autocomplete="email" inputmode="email"') +
+        field("island", "text", false, false) +
+        field("type", "text", true, false) +
+        field("message", "textarea", true, true, c.messagePlaceholder ? ' placeholder="' + esc(c.messagePlaceholder) + '"' : "") +
+        '<div class="form-foot"><button class="btn btn--primary" type="submit">' + esc(c.submitLabel) + " " + ARROW + "</button>" +
+          '<p class="form-note">' + esc(c.note) + (mailto && UI.mailtoNote ? " " + esc(UI.mailtoNote) : "") + "</p></div>" +
         '<p class="form-status" role="status" aria-live="polite"></p>' +
-      "</form></div>";
+      "</form></div>");
 
     var ft = C.footer;
-    $('[data-render="footer"]').innerHTML =
-      '<div class="footer-row">' + brandLink() + '<nav aria-label="Footer">' +
-      C.nav.map(function (n) { return '<a href="' + esc(n.href) + '">' + esc(n.label) + "</a>"; }).join("") + "</nav></div>" +
-      '<div class="footer-row"><span>' + esc(ft.copyright) + "</span><span>" + esc(ft.note) + "</span></div>";
+    fill("footer",
+      '<div class="footer-row"><div class="footer-brand">' + brandLink('aria-label="' + esc(UI.homeLabel) + '"') +
+        (ft.tagline ? '<p class="footer-tagline">' + esc(ft.tagline) + "</p>" : "") + "</div>" +
+        '<nav aria-label="' + esc(UI.footerNav) + '">' + navLinks() + "</nav></div>" +
+      '<div class="footer-row"><span>' + esc(ft.copyright) + "</span>" +
+        '<a class="to-top" href="#">' + esc(UI.backToTop) + ' <span aria-hidden="true">↑</span></a></div>');
   }
 
   /* ---------- mobile menu ---------- */
@@ -189,7 +273,7 @@
         else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
       }
     });
-    window.matchMedia("(min-width: 900px)").addEventListener("change", function (e) { if (e.matches) shut(false); });
+    window.matchMedia("(min-width: 1080px)").addEventListener("change", function (e) { if (e.matches) shut(false); });
   }
 
   /* ---------- frame sequence loader ---------- */
@@ -591,44 +675,97 @@
 
   /* ---------- contact form ---------- */
   function setupForm() {
-    var c = C.contact, form = $(".form"), status = $(".form-status", form);
+    var c = C.contact, form = $(".form");
+    if (!form) return;
+    var status = $(".form-status", form), button = $("button[type=submit]", form);
+    function say(text, isError) {
+      status.textContent = text.replace("{email}", c.email);
+      status.classList.toggle("is-error", !!isError);
+    }
+    form.addEventListener("input", function (e) {
+      if (e.target.getAttribute("aria-invalid") && e.target.checkValidity()) e.target.removeAttribute("aria-invalid");
+    });
     form.addEventListener("submit", function (e) {
       e.preventDefault();
-      status.classList.remove("is-error");
-      if (!form.checkValidity()) {
-        form.reportValidity();
-        status.textContent = "Please fill in your name, a valid email and a short message.";
-        status.classList.add("is-error");
+      var fields = $$("input, textarea", form), bad = fields.filter(function (el) { return !el.checkValidity(); });
+      fields.forEach(function (el) { if (bad.indexOf(el) < 0) el.removeAttribute("aria-invalid"); else el.setAttribute("aria-invalid", "true"); });
+      if (bad.length) {
+        say(UI.formInvalid, true);
+        bad[0].focus();
         return;
       }
       var data = new FormData(form);
       if (c.formEndpoint) {
-        var button = $("button[type=submit]", form);
         button.disabled = true;
-        status.textContent = "Sending…";
+        say(UI.formSending);
         fetch(c.formEndpoint, { method: "POST", body: data, headers: { Accept: "application/json" } })
           .then(function (r) {
             if (!r.ok) throw new Error(r.status);
-            status.textContent = "Thank you. Your request was sent and we'll reply by email.";
+            say(UI.formSent);
             form.reset();
           })
-          .catch(function () {
-            status.textContent = "Your request could not be sent. Please email " + c.email + " instead.";
-            status.classList.add("is-error");
-          })
+          .catch(function () { say(UI.formError, true); })
           .then(function () { button.disabled = false; });
         return;
       }
-      var lines = ["name", "venue", "email", "island", "when"].map(function (k) {
-        return c.fields[k] + ": " + (data.get(k) || "–");
+      // No form service yet: hand the message to the visitor's own email app.
+      // Nothing has been sent at this point, so the status says exactly that.
+      var lines = ["name", "business", "email", "island", "type"].map(function (k) {
+        return c.fields[k] + ": " + (String(data.get(k) || "").trim() || "–");
       });
-      lines.push("", data.get("message") || "");
-      var subject = "Shoot enquiry" + (data.get("venue") ? " – " + data.get("venue") : "");
+      lines.push("", c.fields.message + ":", data.get("message") || "");
+      var business = String(data.get("business") || "").trim();
+      var subject = UI.mailSubject + (business ? " – " + business : "");
       window.location.href = "mailto:" + c.email + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(lines.join("\n"));
-      status.textContent = "Your email app should open with the message ready to send. If it didn't, write to " + c.email + ".";
+      say(UI.mailtoOpened);
     });
   }
 
+  /* ---------- in-page links ---------- */
+  // Menu, buttons and footer links jump to their section below the fixed header.
+  // Between sections the page glides; to or from the film it cuts straight
+  // there, since gliding through the story would replay the whole film.
+  function setupAnchors() {
+    document.addEventListener("click", function (e) {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      var a = e.target.closest && e.target.closest('a[href^="#"]');
+      if (!a) return;
+      var id = a.getAttribute("href").slice(1);
+      var target = id ? document.getElementById(id) : null;
+      if (id && !target) return;
+      e.preventDefault();
+      var story = $("#story");
+      var afterStory = story ? story.offsetTop + story.offsetHeight - window.innerHeight - 2 : 0;
+      var glide = root.classList.contains("motion") && window.scrollY >= afterStory &&
+        (!target || target === story ? false : target.getBoundingClientRect().top + window.scrollY >= afterStory);
+      var behavior = glide ? "smooth" : "auto";
+      if (!target) {
+        window.scrollTo({ top: 0, behavior: behavior });
+        if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+        return;
+      }
+      target.scrollIntoView({ behavior: behavior, block: "start" });
+      // Move keyboard focus with the view, without a second jump.
+      if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
+      try { target.focus({ preventScroll: true }); } catch (err) { target.focus(); }
+    });
+  }
+
+  /* ---------- current section in the menu ---------- */
+  function setupActiveNav() {
+    if (!("IntersectionObserver" in window)) return;
+    var links = $$('.site-nav a:not(.btn), .menu nav a, .site-footer nav a');
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        links.forEach(function (a) {
+          if (a.getAttribute("href") === "#" + en.target.id) a.setAttribute("aria-current", "location");
+          else a.removeAttribute("aria-current");
+        });
+      });
+    }, { rootMargin: "-40% 0px -59% 0px" });
+    $$("main > section[id]").forEach(function (s) { io.observe(s); });
+  }
   /* ---------- section reveals ---------- */
   function setupReveals() {
     var els = $$(".reveal");
@@ -648,5 +785,7 @@
   setupMenu();
   setupStory();
   setupForm();
+  setupAnchors();
+  setupActiveNav();
   setupReveals();
 })();

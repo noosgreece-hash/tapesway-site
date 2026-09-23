@@ -1,6 +1,6 @@
-# TapesWay site
+# tapesway site
 
-A cinematic scroll-story website for TapesWay. A camera on a Santorini terrace carries the visitor into the lens, along a film strip of island venues, and back out to Oia at dusk. Then the page continues into services, a contact sheet, the process and a booking form.
+A cinematic scroll-story website for tapesway, in Greek. A camera on a Santorini terrace carries the visitor into the lens, along a film strip of island venues, and back out to Oia at dusk. Then the page continues into the client's copy: intro, what we offer, our approach, languages, examples, process, time, value and a contact form.
 
 Plain HTML, CSS and JavaScript. No build step and no dependencies.
 
@@ -15,11 +15,19 @@ Any static host works (GitHub Pages, Netlify, Cloudflare Pages, S3). Opening `in
 - `?motion=off` on the URL previews the reduced-motion version
 
 ## Edit the content
-Everything visitors read is in **`content.js`**: headlines, services, process, contact details and form labels. The scroll story itself has no text on it. Edit the text, save and reload. Items marked `PLACEHOLDER` are assumptions to confirm before going live, including the email address and the location.
+Everything visitors read is in **`content.js`**, in the order it appears on the page: the tab title, menu, intro, sections 01 to 08, the form and the footer, plus small interface wording (`ui`: menu labels, form messages). The scroll story itself has no text on it. Edit the text, save and reload.
 
-- **Scroll pacing:** `pacing.desktop` and `pacing.mobile` list each beat's scroll distance (`vh`, in viewport heights) and the stretch of the clip it plays (`from`/`to`, in seconds). A beat with `from` equal to `to` is a still hold. Smaller `vh` numbers play faster. `copy` says which caption shows during the beat.
+- A `title` can be one line or a list of lines; each line starts on its own, and later lines are set in a quieter tone.
+- `text` is a list of paragraphs. `**word**` makes a word bold and `\n` breaks a line inside a paragraph.
+- Buttons and menu items are `{ label, href }`; `#offer`, `#approach`, `#languages`, `#work`, `#process`, `#time`, `#value` and `#contact` jump to those sections, `#intro` to the top of the copy.
+- `work.items` is a `PLACEHOLDER`: frames from the film stand in until real project photos are added.
+
+- **Scroll pacing:** `pacing.desktop` and `pacing.mobile` list each beat's scroll distance (`vh`, in viewport heights) and the stretch of the clip it plays (`from`/`to`, in seconds). A beat with `from` equal to `to` is a still hold. Smaller `vh` numbers play faster.
 - **Lettering on the table:** `story.tableTitle` sets the word and the four corners where it lies on the table in the first frame (`opening`) and the last frame (`ending`), for desktop and for phones. The corners follow the table's perspective. `media/<variant>/table.json` moves it with the table in between. If the clip changes, measure the corners again and re-run `tools/track-table.py` (the phone ones will need it when the portrait clip replaces the interim crop).
 - **Contact form:** by default it opens the visitor's email app, addressed to `contact.email`. To receive submissions directly, set `contact.formEndpoint` to a form service URL that accepts POST, such as Formspree.
+
+## Type
+Headings use Noto Serif Display and body text Inter Tight, both with full Greek. Fraunces (Latin only) sets the tapesway wordmark, the lettering on the table and the numerals. Each family ships as separate Greek and Latin files, and the browser fetches only what a page uses. Labels are in sentence case on purpose, because upper-casing Greek misplaces accents in some browsers.
 
 ## Loading screen
 When the film will play, a loading screen with the logo covers the page until every frame has downloaded and the opening frames are ready, so scrolling is smooth from the start. It gives up waiting after 12 seconds (`PRELOAD_MAX` in `app.js`) and lets the rest stream in. It is skipped for reduced motion.
@@ -45,7 +53,7 @@ style-tile.html                  design board built from the same tokens
 media/desktop, media/mobile      frame atlases, manifest.json, poster.webp
 media/stills                     posters for reduced motion + film-frame crops
 brand/                           your logo: white and black SVG + PNG, favicon, home-screen icon
-fonts/                           self-hosted Fraunces, Inter Tight, IBM Plex Mono (OFL)
+fonts/                           self-hosted Noto Serif Display, Inter Tight, Noto Sans Mono (Greek + Latin) and Fraunces (OFL)
 source/                          original client clip
 docs/VISUAL-STORY.md             storyboard, scene connections, pacing plan
 docs/PRODUCTION-NOTES.md         direction, assumptions, provenance, checks, limits

@@ -1,36 +1,66 @@
 /*
-  TapesWay site content
+  tapesway site content
   ---------------------
-  Edit the words, links and media paths here. Every section of the page is
-  rendered from this object, so you never need to touch index.html or app.js
-  to change copy. Save the file and reload the page to see the change.
+  Every word on the page lives here. Edit the text, save and reload.
+  You never need to touch index.html or app.js to change copy.
 
-  Items marked PLACEHOLDER are assumptions made while building the draft.
-  Replace them with real details before publishing.
+  Writing conventions:
+  - "title" can be one line or a list of lines: ["Line one.", "Line two."]
+  - "text" is a list of paragraphs. Inside a paragraph, **word** makes it bold
+    and a line break ("\n") starts a new line without a gap.
+  - Buttons are { label, href }. An href starting with # jumps to a section:
+    #intro, #offer, #approach, #languages, #work, #process, #time, #value, #contact.
 */
 window.TAPESWAY_CONTENT = {
+  meta: {
+    title: "tapesway · Περιεχόμενο που δημιουργεί επιθυμία",
+    description: "Δημιουργούμε περιεχόμενο για επιχειρήσεις στα ελληνικά νησιά που θέλουν να ξεχωρίζουν, να δημιουργούν εμπιστοσύνη και να μετατρέπουν το ενδιαφέρον των επισκεπτών σε πραγματικές επισκέψεις."
+  },
+
   brand: {
-    name: "TapesWay",
-    tagline: "Photo & film for island hospitality", // PLACEHOLDER: confirm positioning
-    logo: "brand/logo-mark-white.svg", // your mark in white, for the dark header, menu and footer (black version and PNGs in brand/)
-    logoAlt: "TapesWay"
+    name: "tapesway",
+    tagline: "Content with intention.",
+    logo: "brand/logo-mark-white.svg" // your mark in white, for the dark header, menu and footer (black version and PNGs in brand/)
   },
 
   nav: [
-    { label: "Story", href: "#story" },
-    { label: "What we make", href: "#services" },
-    { label: "How it works", href: "#process" },
-    { label: "Contact", href: "#contact" }
+    { label: "Τι προσφέρουμε", href: "#offer" },
+    { label: "Η προσέγγισή μας", href: "#approach" },
+    { label: "Παραδείγματα", href: "#work" },
+    { label: "Επικοινωνία", href: "#contact" }
   ],
-  navCta: { label: "Book a shoot", href: "#contact" },
+  navCta: { label: "Ξεκινήστε μαζί μας", href: "#contact" },
+
+  /* Small interface wording: menu, accessibility labels and form messages. */
+  ui: {
+    skipToContent: "Μετάβαση στο περιεχόμενο",
+    homeLabel: "tapesway, επιστροφή στην αρχή",
+    mainNav: "Κύρια πλοήγηση",
+    footerNav: "Σύνδεσμοι",
+    menu: "Μενού",
+    openMenu: "Άνοιγμα μενού",
+    closeMenu: "Κλείσιμο μενού",
+    storyLabel: "Η ιστορία της tapesway",
+    backToTop: "Επιστροφή στην αρχή",
+    optional: "(προαιρετικό)",
+    emailLabel: "Email",
+    basedInLabel: "Έδρα",
+    formInvalid: "Συμπληρώστε το όνομά σας, ένα έγκυρο email και ένα σύντομο μήνυμα.",
+    formSending: "Αποστολή…",
+    formSent: "Ευχαριστούμε. Το μήνυμά σας στάλθηκε και θα επικοινωνήσουμε μαζί σας σύντομα.",
+    formError: "Το μήνυμα δεν στάλθηκε. Γράψτε μας απευθείας στο {email}.",
+    mailtoNote: "Το κουμπί ανοίγει την εφαρμογή email σας με το μήνυμα έτοιμο προς αποστολή.",
+    mailtoOpened: "Θα πρέπει να άνοιξε η εφαρμογή email σας με το μήνυμα έτοιμο. Πατήστε αποστολή εκεί για να σταλεί. Αν δεν άνοιξε, γράψτε μας στο {email}.",
+    mailSubject: "Νέο μήνυμα από το tapesway.gr"
+  },
 
   /*
     Scroll story. The film plays with no text over it. "skipLabel" is only
     shown to keyboard users, who can jump past the story.
   */
   story: {
-    skipLabel: "Skip the story",
-    skipHref: "#services",
+    skipLabel: "Παράλειψη της ιστορίας",
+    skipHref: "#intro",
     /*
       Lettering that lies on the table whenever the table is in view: in the
       opening shot and in the closing shot, where it stays as the page scrolls
@@ -86,92 +116,285 @@ window.TAPESWAY_CONTENT = {
     mobile: { manifest: "media/mobile/manifest.json" },
     // Stills used for reduced motion, slow connections and load failures (images only, no text).
     stills: {
-      hero: { src: "media/stills/open", alt: "A vintage folding camera on a white terrace at sunset, facing the sea." },
-      frame: { src: "media/stills/terrace", alt: "A strip of film showing a restaurant terrace dressed with white tablecloths under bougainvillea." },
-      finale: { src: "media/stills/oia", alt: "The camera on a white terrace with Oia and the caldera behind it at dusk." }
+      hero: { src: "media/stills/open", alt: "Μια vintage φωτογραφική μηχανή σε λευκή βεράντα στο ηλιοβασίλεμα, με θέα τη θάλασσα." },
+      frame: { src: "media/stills/terrace", alt: "Ένα φιλμ με βεράντα εστιατορίου, στρωμένα τραπέζια και βουκαμβίλιες." },
+      finale: { src: "media/stills/oia", alt: "Η φωτογραφική μηχανή στη βεράντα, με την Οία και την καλντέρα στο σούρουπο." }
     }
   },
 
-  services: {
-    eyebrow: "What we make",
-    title: "Pictures that do the booking work.",
-    intro: "One shoot, planned around your light, gives you the stills, the films and the web story. Everything is delivered sized and ready for where it will live.",
+  hero: {
+    eyebrow: "Περιεχόμενο με σκοπό.",
+    title: ["Δεν αρκεί να σας βλέπουν.", "Πρέπει να θέλουν να έρθουν."],
+    text: [
+      "Δημιουργούμε περιεχόμενο που παρουσιάζει την επιχείρησή σας με τρόπο αυθεντικό, σύγχρονο και ουσιαστικό.",
+      "Γιατί ο επισκέπτης δεν επιλέγει μόνο αυτό που βλέπει. Επιλέγει αυτό που πιστεύει ότι θα ζήσει.",
+      "Εμείς φροντίζουμε η εμπειρία που προσφέρετε να αρχίζει να δημιουργείται από την πρώτη στιγμή που σας συναντά online."
+    ],
+    highlight: "Η σωστή εικόνα μπορεί να γίνει η αρχή μιας πραγματικής εμπειρίας.",
+    actions: [
+      { label: "Ξεκινήστε μαζί μας", href: "#contact", style: "primary" },
+      { label: "Τι προσφέρουμε", href: "#offer", style: "ghost" }
+    ]
+  },
+
+  // Section 01
+  offer: {
+    eyebrow: "Τι προσφέρουμε",
+    title: ["Δεν δημιουργούμε απλώς περιεχόμενο.", "Δημιουργούμε λόγους για να σας επιλέξουν."],
+    text: [
+      "Η παρουσία μιας επιχείρησης στα social media δεν χρειάζεται να είναι απλώς όμορφη.",
+      "Χρειάζεται να έχει λόγο ύπαρξης.",
+      "Δημιουργούμε περιεχόμενο που τραβά την προσοχή, παρουσιάζει την αξία της επιχείρησής σας και βοηθά τον επισκέπτη να καταλάβει γιατί αξίζει να σας επιλέξει.",
+      "Από Reels και TikTok videos μέχρι carousels, posts και φωτογραφικό περιεχόμενο, κάθε δημιουργικό στοιχείο έχει συγκεκριμένο σκοπό."
+    ],
     items: [
       {
-        title: "Photography",
-        text: "Rooms, terraces, tables and details, shot through golden and blue hour.",
-        points: ["Edited stills for web and booking platforms", "Print-resolution masters", "Detail and food sets"],
-        image: "media/stills/frame-terrace.webp",
-        imageAlt: "Terrace tables under pink bougainvillea."
+        number: "01", label: "Προσοχή",
+        title: "Κάντε τον επισκέπτη να σταματήσει.",
+        text: [
+          "Ο επισκέπτης σας βλέπει δεκάδες επιχειρήσεις κάθε μέρα.",
+          "Γι’ αυτό δημιουργούμε περιεχόμενο που ξεχωρίζει χωρίς να χρειάζεται να υπερβάλλει.",
+          "Σύντομο, ξεκάθαρο και προσεγμένο, ώστε μέσα στα πρώτα δευτερόλεπτα να καταλάβει ποιοι είστε και τι μπορείτε να του προσφέρετε."
+        ]
       },
       {
-        title: "Film",
-        text: "Short brand films and cut-downs that carry the mood of a stay or a dinner.",
-        points: ["Hero film for your homepage", "Vertical cut-downs for social", "Ambient loops without sound"],
-        image: "media/stills/frame-sea.webp",
-        imageAlt: "The caldera and the Aegean under a clear evening sky."
+        number: "02", label: "Επιθυμία",
+        title: "Δείξτε του πώς είναι να βρίσκεται εκεί.",
+        text: [
+          "Το καλό περιεχόμενο δείχνει.",
+          "Το καλύτερο περιεχόμενο κάνει τον άνθρωπο που το βλέπει να φαντάζεται τον εαυτό του μέσα στην εμπειρία.",
+          "Αναδεικνύουμε την ατμόσφαιρα, τις λεπτομέρειες, τους ανθρώπους και τις στιγμές που κάνουν την επιχείρησή σας ξεχωριστή.",
+          "Γιατί τελικά, ο επισκέπτης δεν αγοράζει απλώς μια υπηρεσία. Αγοράζει την εμπειρία που περιμένει να ζήσει."
+        ]
       },
       {
-        title: "Scroll stories",
-        text: "Cinematic web sequences like this page, built from your own footage.",
-        points: ["Desktop and mobile versions", "Editable text over the motion", "Fast, still-image fallbacks"],
-        image: "media/stills/frame-room.webp",
-        imageAlt: "A candlelit dining room with a terracotta amphora."
+        number: "03", label: "Εμπιστοσύνη",
+        title: "Κάντε τους να σας γνωρίσουν πριν έρθουν.",
+        text: [
+          "Πριν κάνει μια κράτηση ή επισκεφθεί την επιχείρησή σας, ο άνθρωπος θέλει να ξέρει τι να περιμένει.",
+          "Το περιεχόμενο μπορεί να του δώσει αυτή την απάντηση.",
+          "Παρουσιάζουμε την επιχείρησή σας με φυσικό και αυθεντικό τρόπο, ώστε ο επισκέπτης να γνωρίσει την ατμόσφαιρα, την ποιότητα και τους ανθρώπους πίσω από αυτή."
+        ]
+      },
+      {
+        number: "04", label: "Συνέπεια",
+        title: "Μείνετε στη σκέψη του.",
+        text: [
+          "Μία καλή δημοσίευση δεν αρκεί για να δημιουργήσει μια δυνατή παρουσία.",
+          "Η συνέπεια είναι αυτή που χτίζει αναγνωρισιμότητα.",
+          "Κάθε εβδομάδα δημιουργούμε νέο περιεχόμενο για Instagram, TikTok και Facebook, ώστε η επιχείρησή σας να παραμένει ενεργή και παρούσα όταν ο επισκέπτης αρχίζει να σκέφτεται το επόμενο ταξίδι του."
+        ]
       }
     ]
   },
 
-  process: {
-    eyebrow: "How it works",
-    title: "One plan, built around the light.",
-    steps: [
-      { label: "Scout", text: "We walk the venue with you, note where the sun falls and plan each shot around it." },
-      { label: "Shoot", text: "We shoot through golden hour, blue hour and service, planned around your guests." },
-      { label: "Deliver", text: "You get edited stills, films and web-ready sequences, named and sized for each use." }
+  // Section 02
+  approach: {
+    eyebrow: "Η προσέγγισή μας",
+    title: ["Οι περισσότεροι δείχνουν την επιχείρησή τους.", "Εμείς δείχνουμε την εμπειρία."],
+    statements: [
+      "Ένα ξενοδοχείο δεν είναι μόνο ένα δωμάτιο.",
+      "Ένα εστιατόριο δεν είναι μόνο ένα τραπέζι.",
+      "Μια βόλτα με σκάφος δεν είναι μόνο μια διαδρομή."
     ],
-    note: "Every venue gets its own plan and schedule."
+    text: [
+      "Πίσω από κάθε επιχείρηση υπάρχει μια εμπειρία.",
+      "Και αυτή είναι που θέλει να γνωρίσει ο επισκέπτης.",
+      "Γι’ αυτό, πριν δημιουργήσουμε οποιοδήποτε περιεχόμενο, προσπαθούμε πρώτα να καταλάβουμε τι κάνει τη δική σας επιχείρηση διαφορετική."
+    ],
+    questions: [
+      "Τι θα θυμηθεί ο επισκέπτης;",
+      "Τι θα τον κάνει να μιλήσει γι’ αυτό;",
+      "Τι θα τον κάνει να θέλει να επιστρέψει;"
+    ],
+    closing: "Εκεί βρίσκεται το περιεχόμενο που αξίζει να δημιουργηθεί.",
+    image: "media/stills/oia",
+    imageAlt: "Η φωτογραφική μηχανή σε λευκή βεράντα, με την Οία και την καλντέρα στο σούρουπο."
   },
 
-  contactSheet: {
-    eyebrow: "Contact sheet",
-    title: "Frames from the reel.",
+  // Section 03
+  languages: {
+    eyebrow: "Για ένα διεθνές κοινό",
+    title: ["Η γλώσσα αλλάζει.", "Η επιθυμία όχι."],
+    text: [
+      "Οι επισκέπτες σας έρχονται από διαφορετικές χώρες, με διαφορετικές συνήθειες και διαφορετικούς τρόπους να αναζητούν την επόμενη εμπειρία τους.",
+      "Γι’ αυτό δεν αρκεί μια απλή μετάφραση.",
+      "Δημιουργούμε περιεχόμενο με ανθρώπους που επικοινωνούν στα **αγγλικά, γερμανικά και γαλλικά**, ώστε το μήνυμά σας να ακούγεται φυσικό και οικείο στο κοινό που θέλετε να προσεγγίσετε.",
+      "Δεν μεταφράζουμε απλώς τις λέξεις."
+    ],
+    closing: "Μεταφέρουμε την εμπειρία.",
+    codes: ["EN", "DE", "FR"] // decorative, one per language above
+  },
+
+  // Section 04
+  work: {
+    eyebrow: "Παραδείγματα",
+    title: "Μερικά πράγματα είναι καλύτερο να τα δείχνεις.",
+    text: [
+      "Κάθε επιχείρηση έχει κάτι που την κάνει ξεχωριστή.",
+      "Η δουλειά μας είναι να το ανακαλύψουμε και να το μετατρέψουμε σε περιεχόμενο που αξίζει να δει ο κόσμος."
+    ],
+    /*
+      PLACEHOLDER: the showcase uses frames from the film at the top of this
+      page until real project work is added. Add or remove items freely;
+      "image" is a picture path, "alt" describes it for screen readers.
+    */
     items: [
-      { image: "media/stills/frame-terrace.webp", alt: "A whitewashed restaurant terrace set for dinner.", caption: "Terrace, before service" },
-      { image: "media/stills/frame-bloom.webp", alt: "Bougainvillea over a sea view.", caption: "Bougainvillea, 7 pm" },
-      { image: "media/stills/frame-room.webp", alt: "A warm dining room with an amphora.", caption: "Dining room, candlelight" },
-      { image: "media/stills/frame-sea.webp", alt: "The caldera cliffs over a deep blue sea.", caption: "Caldera, from the terrace" }
+      { image: "media/stills/open-1600.webp", alt: "Φωτογραφική μηχανή σε λευκή βεράντα στο ηλιοβασίλεμα." },
+      { image: "media/stills/frame-terrace.webp", alt: "Βεράντα εστιατορίου με στρωμένα τραπέζια κάτω από βουκαμβίλιες." },
+      { image: "media/stills/frame-bloom.webp", alt: "Βουκαμβίλιες πάνω από τη θάλασσα." },
+      { image: "media/stills/frame-room.webp", alt: "Ζεστή τραπεζαρία με αμφορέα και κεριά." },
+      { image: "media/stills/frame-sea.webp", alt: "Η καλντέρα και το Αιγαίο το απόγευμα." },
+      { image: "media/stills/oia-1600.webp", alt: "Η Οία στο σούρουπο, πίσω από τη φωτογραφική μηχανή." }
+    ],
+    closing: ["Η δική σας επιχείρηση έχει τη δική της ιστορία.", "Εμείς φροντίζουμε να ειπωθεί σωστά."]
+  },
+
+  // Section 05
+  process: {
+    eyebrow: "Η διαδικασία",
+    title: ["Τρία βήματα.", "Μία σταθερή παρουσία για την επιχείρησή σας."],
+    text: [
+      "Κρατάμε τη διαδικασία απλή.",
+      "Εσείς γνωρίζετε καλύτερα την επιχείρησή σας. Εμείς γνωρίζουμε πώς να μετατρέψουμε αυτή τη γνώση σε περιεχόμενο που λειτουργεί online."
+    ],
+    steps: [
+      {
+        number: "01", label: "Κατανοούμε",
+        title: "Πρώτα ακούμε.",
+        text: [
+          "Τι προσφέρετε;\nΤι σας κάνει διαφορετικούς;\nΠοιον θέλετε να προσεγγίσετε;\nΤι θέλετε να αισθανθεί ο επισκέπτης;",
+          "Γνωρίζουμε την επιχείρησή σας πριν δημιουργήσουμε οτιδήποτε.",
+          "Γιατί το σωστό περιεχόμενο ξεκινά πάντα από τη σωστή κατανόηση."
+        ]
+      },
+      {
+        number: "02", label: "Δημιουργούμε",
+        title: "Μετατρέπουμε την εμπειρία σας σε περιεχόμενο.",
+        text: [
+          "Από την ιδέα μέχρι την τελική δημιουργία, κάθε στοιχείο έχει συγκεκριμένο σκοπό.",
+          "Η εικόνα, η γλώσσα, ο ρυθμός, οι άνθρωποι και η ιστορία συνεργάζονται για να παρουσιάσουν την επιχείρησή σας με τρόπο που ταιριάζει πραγματικά σε εσάς.",
+          "Τίποτα δεν γίνεται απλώς για να υπάρχει ένα ακόμη post."
+        ]
+      },
+      {
+        number: "03", label: "Παραδίδουμε",
+        title: "Εσείς συνεχίζετε τη δουλειά σας. Εμείς φροντίζουμε το περιεχόμενό σας.",
+        text: [
+          "Κάθε εβδομάδα λαμβάνετε νέο, οργανωμένο και έτοιμο προς δημοσίευση περιεχόμενο για τα social media σας.",
+          "Δεν χρειάζεται να ψάχνετε κάθε εβδομάδα τι θα δημοσιεύσετε.",
+          "Το περιεχόμενο είναι έτοιμο.\nΕσείς το δημοσιεύετε."
+        ]
+      }
     ]
   },
 
+  // Section 06
+  time: {
+    eyebrow: "Περισσότερη ουσία. Λιγότερη ταλαιπωρία.",
+    title: ["Εσείς έχετε μια επιχείρηση να τρέξετε.", "Το περιεχόμενο δεν θα έπρεπε να σας παίρνει όλη την ημέρα."],
+    text: ["Η δημιουργία σταθερού και ποιοτικού περιεχομένου απαιτεί χρόνο."],
+    tasks: ["Ιδέες.", "Σενάρια.", "Οργάνωση.", "Άνθρωποι.", "Γυρίσματα.", "Γλώσσες.", "Επεξεργασία.", "Προγραμματισμός."],
+    tasksAfter: "Και όλα αυτά, ξανά και ξανά.",
+    highlight: "Με την tapesway, όλη αυτή η διαδικασία γίνεται αυτοματοποιημένα και οργανωμένα.",
+    highlightText: "Από τη δημιουργία των ιδεών μέχρι την παράδοση του τελικού περιεχομένου, η διαδικασία έχει σχεδιαστεί ώστε να περιορίζει τη δική σας καθημερινή ενασχόληση και να σας εξοικονομεί πολύτιμο χρόνο.",
+    items: [
+      {
+        title: "Λιγότερος χρόνος στην αναζήτηση ιδεών",
+        text: [
+          "Δεν χρειάζεται να αναρωτιέστε κάθε εβδομάδα τι θα ανεβάσετε.",
+          "Εμείς αναλαμβάνουμε να βρίσκουμε τις ιδέες και να τις μετατρέπουμε σε περιεχόμενο που ταιριάζει στην επιχείρησή σας."
+        ]
+      },
+      {
+        title: "Χωρίς συνεχή οργάνωση παραγωγών",
+        text: [
+          "Δεν χρειάζεται να συντονίζετε κάθε φορά φωτογραφίσεις, γυρίσματα, χώρους και ανθρώπους.",
+          "Η διαδικασία παραγωγής οργανώνεται από εμάς, ώστε να μην επιβαρύνεται η καθημερινή λειτουργία της επιχείρησής σας."
+        ]
+      },
+      {
+        title: "Περιεχόμενο για διεθνές κοινό",
+        text: [
+          "Δεν χρειάζεται να αναζητάτε ξεχωριστά ανθρώπους για κάθε γλώσσα.",
+          "Δημιουργούμε περιεχόμενο με φυσική και καθαρή επικοινωνία στα **αγγλικά, γερμανικά και γαλλικά**, προσαρμοσμένο στο κοινό που θέλετε να προσεγγίσετε."
+        ]
+      },
+      {
+        title: "Ένα οργανωμένο σύστημα περιεχομένου",
+        text: [
+          "Από την ιδέα μέχρι την τελική παράδοση, η διαδικασία είναι οργανωμένη σε ένα ενιαίο workflow.",
+          "Έτσι, δεν χρειάζεται να διαχειρίζεστε διαφορετικούς ανθρώπους, διαφορετικά στάδια και διαφορετικές διαδικασίες κάθε εβδομάδα."
+        ]
+      },
+      {
+        title: "Σταθερό περιεχόμενο χωρίς καθημερινό άγχος",
+        text: [
+          "Η συνέπεια είναι μέρος της συνεργασίας μας.",
+          "Κάθε εβδομάδα υπάρχει νέο περιεχόμενο, ώστε η επιχείρησή σας να παραμένει ενεργή χωρίς να χρειάζεται να αναζητάτε συνεχώς την επόμενη ιδέα."
+        ]
+      }
+    ],
+    result: {
+      kicker: "Το αποτέλεσμα;",
+      lines: [
+        "Περισσότερος χρόνος για την επιχείρησή σας.",
+        "Λιγότερος χρόνος πίσω από την οθόνη.",
+        "Σταθερό περιεχόμενο, χωρίς όλη η διαδικασία να περνά από εσάς."
+      ]
+    },
+    closing: ["Εσείς φροντίζετε την εμπειρία που προσφέρετε.", "Εμείς φροντίζουμε να υπάρχει η σωστή ιστορία για να τη γνωρίσουν."]
+  },
+
+  // Section 07
+  value: {
+    eyebrow: "Η αξία για την επιχείρησή σας",
+    title: "Περισσότερα από περιεχόμενο.",
+    text: [
+      "Με μια σταθερή και σωστά σχεδιασμένη παρουσία, η επιχείρησή σας κερδίζει περισσότερες ευκαιρίες να τη γνωρίσουν οι σωστοί άνθρωποι — ενώ εσείς κερδίζετε κάτι εξίσου σημαντικό: χρόνο για να ασχοληθείτε με αυτό που πραγματικά έχει σημασία."
+    ],
+    items: [
+      { title: "Περισσότερη ορατότητα", text: "Παρουσία εκεί όπου οι επισκέπτες αναζητούν την επόμενη εμπειρία τους." },
+      { title: "Περισσότερη εμπιστοσύνη", text: "Μια εικόνα της επιχείρησής σας που βοηθά τον επισκέπτη να ξέρει τι να περιμένει." },
+      { title: "Περισσότερη αναγνωρισιμότητα", text: "Συνεπής παρουσία που βοηθά το όνομά σας να μένει στη μνήμη." },
+      { title: "Περισσότερος χρόνος για εσάς", text: "Εσείς επικεντρώνεστε στην επιχείρησή σας. Εμείς αναλαμβάνουμε το περιεχόμενο και τη διαδικασία πίσω από αυτό." }
+    ]
+  },
+
+  // Section 08
   contact: {
-    eyebrow: "Book a shoot",
-    title: "Tell us about your place.",
-    text: "Share the venue, the island and the season you have in mind. We reply with a light plan and dates.",
-    email: "hello@tapesway.example", // PLACEHOLDER: replace with the real inbox
-    location: "Santorini · Cyclades", // PLACEHOLDER: confirm base
+    eyebrow: "Ξεκινήστε μαζί μας",
+    title: ["Πείτε μας την ιστορία σας.", "Εμείς θα φροντίσουμε να την ακούσουν οι σωστοί άνθρωποι."],
+    text: [
+      "Πείτε μας λίγα λόγια για την επιχείρησή σας, το νησί όπου δραστηριοποιείστε και τους στόχους σας.",
+      "Θα γνωρίσουμε την επιχείρησή σας, θα κατανοήσουμε τι την κάνει ξεχωριστή και θα σας παρουσιάσουμε μια ξεκάθαρη πρόταση για το πώς μπορούμε να αναδείξουμε την παρουσία της online.",
+      "Χωρίς περίπλοκες διαδικασίες.\nΧωρίς δεσμεύσεις."
+    ],
+    email: "hello@tapesway.gr",
+    location: "Mykonos, Greece",
     /*
       Leave formEndpoint empty to have the form open the visitor's email app
-      with the details filled in (nothing is sent by the website itself).
-      Set it to a form service URL that accepts POST (for example a Formspree
-      endpoint) to send submissions directly; success is only shown when that
-      service answers OK.
+      with the message filled in and addressed to "email" above (nothing is
+      sent by the website itself). Set it to a form service URL that accepts
+      POST (for example a Formspree endpoint) to send messages directly;
+      success is only shown when that service answers OK.
     */
     formEndpoint: "",
-    submitLabel: "Send request",
-    mailtoSubmitLabel: "Open email to send",
-    mailtoNote: "This opens your email app with your details filled in. Nothing is sent until you press send there.",
     fields: {
-      name: "Your name",
-      venue: "Venue name",
+      name: "Όνομα",
+      business: "Επιχείρηση",
       email: "Email",
-      island: "Island",
-      when: "Preferred month",
-      message: "What would you like to show?"
-    }
+      island: "Νησί",
+      type: "Τύπος επιχείρησης",
+      message: "Μήνυμα"
+    },
+    messagePlaceholder: "Πείτε μας λίγα περισσότερα για την επιχείρησή σας και τι θα θέλατε να πετύχετε.",
+    submitLabel: "Στείλτε το μήνυμά σας",
+    note: "Θα επικοινωνήσουμε μαζί σας εντός 24 ωρών."
   },
 
   footer: {
-    note: "Draft site. Copy and contact details are placeholders until confirmed.",
-    copyright: "© 2026 TapesWay"
+    tagline: "Content with intention.",
+    copyright: "© 2026 tapesway. All rights reserved. Thank you."
   }
 };

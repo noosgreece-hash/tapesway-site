@@ -1,15 +1,16 @@
 <!doctype html>
-<html lang="en">
+<html lang="el">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>TapesWay · Photo & film for island hospitality</title>
-  <meta name="description" content="TapesWay photographs and films hotels, restaurants and villas across the Cyclades.">
+  <title>tapesway · Περιεχόμενο που δημιουργεί επιθυμία</title>
+  <meta name="description" content="Δημιουργούμε περιεχόμενο για επιχειρήσεις στα ελληνικά νησιά που θέλουν να ξεχωρίζουν, να δημιουργούν εμπιστοσύνη και να μετατρέπουν το ενδιαφέρον των επισκεπτών σε πραγματικές επισκέψεις.">
   <meta name="theme-color" content="#141215">
   <link rel="icon" href="brand/favicon-64.png" type="image/png" sizes="64x64">
   <link rel="apple-touch-icon" href="brand/apple-touch-icon.png">
+  <link rel="preload" href="fonts/noto-serif-display-greek-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/inter-tight-greek-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/fraunces-latin-full-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <script>
     // Decide, before anything paints, whether the scroll animation should run.
     (function () {
@@ -31,7 +32,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
+  <a class="skip-link" href="#intro">Μετάβαση στο περιεχόμενο</a>
 
   <!-- Shown only when the film will play; app.js lifts it once the frames are loaded. -->
   <div class="preloader" aria-hidden="true">
@@ -43,19 +44,26 @@
   <header class="site-header" data-render="header"></header>
   <div class="menu" id="site-menu" data-render="menu" hidden></div>
 
+  <!-- Every section is filled from content.js by app.js. -->
   <main id="main">
-    <section id="story" class="story" aria-label="The TapesWay story" data-render="story">
+    <section id="story" class="story" aria-label="Η ιστορία της tapesway" data-render="story">
       <noscript>
         <div class="story-noscript">
-          <img src="media/stills/open-1600.webp" alt="A vintage folding camera on a white terrace at sunset, facing the sea.">
-          <h1>TapesWay: photo & film for island hospitality.</h1>
+          <img src="media/stills/open-1600.webp" alt="Μια vintage φωτογραφική μηχανή σε λευκή βεράντα στο ηλιοβασίλεμα, με θέα τη θάλασσα.">
+          <h1>tapesway</h1>
+          <p>Περιεχόμενο με σκοπό για επιχειρήσεις στα ελληνικά νησιά. Ενεργοποιήστε τη JavaScript για να δείτε ολόκληρη τη σελίδα, ή γράψτε μας στο <a href="mailto:hello@tapesway.gr">hello@tapesway.gr</a>.</p>
         </div>
       </noscript>
     </section>
-    <section id="services" class="section section--services" data-render="services"></section>
-    <section id="sheet" class="section section--sheet" data-render="contactSheet"></section>
-    <section id="process" class="section section--process" data-render="process"></section>
-    <section id="contact" class="section section--contact" data-render="contact"></section>
+    <section id="intro" class="section section--intro" aria-labelledby="intro-title" data-render="intro"></section>
+    <section id="offer" class="section section--offer" aria-labelledby="offer-title" data-render="offer"></section>
+    <section id="approach" class="section section--approach on-dark" aria-labelledby="approach-title" data-render="approach"></section>
+    <section id="languages" class="section section--languages" aria-labelledby="languages-title" data-render="languages"></section>
+    <section id="work" class="section section--work on-dark" aria-labelledby="work-title" data-render="work"></section>
+    <section id="process" class="section section--process" aria-labelledby="process-title" data-render="process"></section>
+    <section id="time" class="section section--time" aria-labelledby="time-title" data-render="time"></section>
+    <section id="value" class="section section--value" aria-labelledby="value-title" data-render="value"></section>
+    <section id="contact" class="section section--contact" aria-labelledby="contact-title" data-render="contact"></section>
   </main>
 
   <footer class="site-footer" data-render="footer"></footer>

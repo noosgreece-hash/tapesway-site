@@ -1,12 +1,12 @@
 # Production notes
 
 ## Direction
-**Golden hour, on film.** The supplied clip suggested the positioning: a camera on a Santorini terrace, a film strip of island venues, then Oia at dusk. The site treats it as a darkroom and a white terrace. Ink and whitewash carry the page, brass is the light on the film edge, and bougainvillea magenta is the single accent. Frames on the page are presented as film: sprocket edges, ink borders and mono frame labels. Type: Fraunces for display, Inter Tight for body, IBM Plex Mono for labels. All three are self-hosted (SIL OFL, licences in `fonts/`).
+**Golden hour, on film.** The supplied clip suggested the positioning: a camera on a Santorini terrace, a film strip of island venues, then Oia at dusk. The site treats it as a darkroom and a white terrace. Ink and whitewash carry the page, brass is the light on the film edge, and bougainvillea magenta is the single accent. Frames on the page are presented as film: sprocket edges, ink borders and mono frame labels. Type (since the Greek copy, 2026-09-23): Noto Serif Display for headings, Inter Tight for body and labels, Fraunces for the wordmark, table lettering and numerals, Noto Sans Mono for small Latin details. All are self-hosted (SIL OFL, licences in `fonts/`).
 
 ## Assumptions (replace when confirmed)
-- **Business:** TapesWay is a photo and film studio for hotels, restaurants and villas in the Cyclades, and the main action is "Book a shoot". This was inferred from the video. A decision card in the project thread offers Restaurant and Boutique stay as alternatives.
-- **Placeholders:** `hello@tapesway.example` and "Santorini · Cyclades".
-- **No invented credibility:** the site has no clients, testimonials, prices, counts or awards. The venue frames come from the supplied reel. They are captioned as "frames from the reel", with no claim that they are client work.
+- **Copy:** all section copy is the client's own Greek text (supplied 2026-09-23): a weekly social-media content service for businesses on the Greek islands, main action "Ξεκινήστε μαζί μας". Email hello@tapesway.gr, based in Mykonos, Greece. Interface wording the copy did not cover (menu and accessibility labels, form messages, image descriptions, the "Έδρα" label) was written to match and lives in `content.js` under `ui`.
+- **Examples section:** the copy marks it `[PORTFOLIO / WORK SHOWCASE]`. Until real project work exists it shows frames from the supplied film, uncaptioned, with no claim that they are client work.
+- **No invented credibility:** the site has no clients, testimonials, prices, counts or awards.
 - **Contact form:** it opens the visitor's email app with the details filled in, and says so on the page. Setting `contact.formEndpoint` in `content.js` to a form service sends submissions directly. The page shows success only when that service answers OK.
 
 ## Asset provenance

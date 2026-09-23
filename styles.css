@@ -70,6 +70,10 @@
   --font-brand: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   --font-body: "Inter Tight", "Helvetica Neue", Arial, system-ui, sans-serif;
   --font-mono: "Noto Sans Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  /* Weight of the serif. Its thin strokes get hairline-thin at the regular 400,
+     so large titles use a heavier cut and smaller serif lines heavier still. */
+  --display-weight: 540;
+  --display-weight-sm: 580;
 
   --header-h: 64px;
   --gutter: clamp(16px, 5vw, 80px);
@@ -112,7 +116,7 @@ a:hover { color: var(--bloom); }
 
 h1, h2, h3 {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: var(--display-weight);
   letter-spacing: -0.01em;
   line-height: 1.06;
   margin: 0;
@@ -247,7 +251,7 @@ em.accent { font-style: italic; color: var(--bloom); }
 .menu ul a {
   display: flex; align-items: center; justify-content: space-between;
   min-height: 64px;
-  font-family: var(--font-display); font-size: 30px; font-weight: 360;
+  font-family: var(--font-display); font-size: 30px; font-weight: var(--display-weight-sm);
   text-decoration: none; color: var(--cream);
 }
 .menu ul a:hover, .menu ul a[aria-current] { color: var(--brass); }
@@ -404,13 +408,13 @@ html.no-motion .story-static { display: block; }
 @media (min-width: 1000px) { .prose--offset { margin-left: calc(100% * 5 / 12); } }
 
 .highlight {
-  font-family: var(--font-display); font-weight: 400;
+  font-family: var(--font-display); font-weight: var(--display-weight-sm);
   font-size: clamp(22px, 2.1vw, 30px); line-height: 1.25; color: var(--ink);
   padding-left: 20px; border-left: 2px solid var(--bloom);
   text-wrap: balance;
 }
 .closing {
-  font-family: var(--font-display); font-weight: 400;
+  font-family: var(--font-display); font-weight: var(--display-weight-sm);
   font-size: clamp(24px, 2.8vw, 40px); line-height: 1.15;
   margin-top: clamp(32px, 4vw, 56px);
   text-wrap: balance;
@@ -471,11 +475,11 @@ html.no-motion .story-static { display: block; }
 /* 02 Approach */
 .statements { list-style: none; margin: 0 0 40px; padding: 0; border-top: 1px solid var(--line-dark); }
 .statements li {
-  font-family: var(--font-display); font-size: clamp(22px, 2.4vw, 34px); line-height: 1.2;
+  font-family: var(--font-display); font-weight: var(--display-weight-sm); font-size: clamp(22px, 2.4vw, 34px); line-height: 1.2;
   padding: 18px 0; border-bottom: 1px solid var(--line-dark);
 }
 .questions { list-style: none; margin: 40px 0 0; padding: 0; display: grid; gap: 12px; }
-.questions li { font-family: var(--font-display); font-size: clamp(21px, 2vw, 28px); line-height: 1.25; color: var(--brass); }
+.questions li { font-family: var(--font-display); font-weight: var(--display-weight-sm); font-size: clamp(21px, 2vw, 28px); line-height: 1.25; color: var(--brass); }
 
 /* 03 Languages */
 .lang-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 40px; align-items: center; }
@@ -527,7 +531,7 @@ html.no-motion .story-static { display: block; }
 .tasks {
   list-style: none; margin: clamp(40px, 5vw, 64px) 0 0; padding: 0;
   display: flex; flex-wrap: wrap; gap: .1em .45em;
-  font-family: var(--font-display); font-size: clamp(28px, 4.2vw, 58px); line-height: 1.1;
+  font-family: var(--font-display); font-size: clamp(28px, 4.2vw, 58px); line-height: 1.1; font-weight: var(--display-weight);
 }
 .tasks-after { margin-top: 18px; font-size: 16px; font-weight: 500; color: var(--muted); }
 .split--time { margin-top: clamp(64px, 8vw, 120px); }
@@ -549,7 +553,7 @@ html.no-motion .story-static { display: block; }
 }
 .result-kicker { font-size: 15px; font-weight: 500; letter-spacing: .02em; color: var(--brass); }
 .result ul { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 10px; }
-.result li { font-family: var(--font-display); font-size: clamp(23px, 3vw, 42px); line-height: 1.15; text-wrap: balance; }
+.result li { font-family: var(--font-display); font-weight: var(--display-weight-sm); font-size: clamp(23px, 3vw, 42px); line-height: 1.15; text-wrap: balance; }
 @media (max-width: 599px) {
   .benefit { grid-template-columns: 48px minmax(0, 1fr); }
   .benefit .num { font-size: 26px; }
@@ -637,3 +641,6 @@ html.fx .work-zoom img { transform: scale(var(--zoom, 1)); }
   .m-only { display: revert; }
 }
 
+
+/* Smaller serif titles (cards, steps, lists) take the heavier cut too. */
+h3 { font-weight: var(--display-weight-sm); }

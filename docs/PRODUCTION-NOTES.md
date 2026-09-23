@@ -53,7 +53,7 @@ Why reframe for mobile: it recomposes the same footage to 9:16, so camera geomet
 - Each viewport requested only its own sequence (desktop: 73 desktop atlases, 0 mobile; phone: the reverse). Resizing across the breakpoint aborted and freed the old sequence and loaded only the new one.
 - Reduced motion: no manifest or frame requests, and the static story is shown. A failing manifest, or failing frames, falls back to the static story.
 - Menu: opens with focus on Close, Tab cycles inside it, Escape closes it and returns focus to the menu button, and a link closes it and lands below the fixed header. The header stays fixed after the story ends.
-- Ordinary wheel scrolling forward through the whole story advanced frames steadily (see `VISUAL-STORY.md`).
+- Ordinary wheel scrolling forward through the whole story advanced frames steadily (see `VISUAL-STORY.md`). Scrolling back with the wheel from the end, at 1280×720, only ever decreased the frame (288 → 0) and returned to the opening frame.
 
 ## Not verified
 - Real-device smoothness (iOS Safari, Android Chrome), the mobile URL-bar resize behaviour, and actual load speed on real networks. File sizes above are not speed measurements.

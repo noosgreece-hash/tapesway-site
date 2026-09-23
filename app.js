@@ -357,8 +357,7 @@
     // frame is in and the opening frames are decoded, or after PRELOAD_MAX ms.
     var PRELOAD_MAX = 12000;
     var pre = $(".preloader"), preBar = pre ? $("b", pre) : null;
-    var deepLink = location.hash && location.hash !== "#story" && location.hash !== "#main";
-    var preDone = !pre || !motionOn() || deepLink;
+    var preDone = !pre || !motionOn();
     function preloadDone() {
       if (pre) pre.classList.add("is-done");
       root.classList.remove("is-preloading");
@@ -566,6 +565,14 @@
     window.addEventListener("pagehide", function () { if (seq) seq.destroy(); });
 
     sizeCanvas();
+    // Start at the very top; the browser may still restore a position as late as "load",
+    // so reset again then unless the visitor has already begun to scroll.
+    var touched = false;
+    ["wheel", "touchstart", "keydown", "mousedown"].forEach(function (ev) {
+      window.addEventListener(ev, function () { touched = true; }, { passive: true, once: true });
+    });
+    window.scrollTo(0, 0);
+    window.addEventListener("load", function () { if (!touched) window.scrollTo(0, 0); });
     load(mq.matches ? "mobile" : "desktop");
 
     // Debug hook for testing: exposes state without affecting behaviour.

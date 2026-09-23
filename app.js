@@ -43,7 +43,7 @@
   var ICON_CLOSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>';
 
   function brandLink(extra) {
-    return '<a class="brand" href="#" ' + (extra || "") + '><img src="' + esc(C.brand.logo) + '" alt="" width="30" height="30"><span>' + esc(C.brand.name) + "</span></a>";
+    return '<a class="brand" href="#" ' + (extra || "") + '><img src="' + esc(C.brand.logo) + '" alt="" width="32" height="36"><span>' + esc(C.brand.name) + "</span></a>";
   }
 
   /* ---------- render ---------- */
@@ -366,7 +366,7 @@
   /* ---------- scroll story ---------- */
   function setupStory() {
     var story = $("#story"), track = $(".story-track"), stage = $(".story-stage");
-    var canvas = $(".story-canvas"), ctx = canvas.getContext("2d");
+    var canvas = $(".story-canvas"), ctx = canvas.getContext("2d", { alpha: false });
     var counter = $(".story-counter"), bar = $(".story-progress b"), progress = $(".story-progress");
     var skip = $(".story-skip");
     var copies = $$("[data-copy]", stage);
@@ -404,7 +404,7 @@
         var s = segs[k];
         if (t < s.end || k === segs.length - 1) {
           var local = s.vh ? clamp((t - s.start) / s.vh, 0, 1) : 1;
-          return s.f0 + (s.f1 - s.f0) * local; // fractional: blended between frames
+          return s.f0 + (s.f1 - s.f0) * local; // fractional; show() rounds to a whole frame
         }
       }
       return 0;
@@ -429,34 +429,31 @@
       var w = Math.round(stage.clientWidth * dpr), h = Math.round(stage.clientHeight * dpr);
       if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; drawnKey = ""; }
     }
-    function paint(c, alpha) {
+    function paint(c) {
       var cw = canvas.width, ch = canvas.height, iw = c.sw, ih = c.sh;
       var sc = Math.max(cw / iw, ch / ih), dw = iw * sc, dh = ih * sc;
       var fx = seq && seq.m.focalX != null ? seq.m.focalX : 0.5, fy = seq && seq.m.focalY != null ? seq.m.focalY : 0.5;
-      ctx.globalAlpha = alpha == null ? 1 : alpha;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high"; // resizing the canvas resets this, so set it on every draw
       ctx.drawImage(c.img, c.sx, c.sy, c.sw, c.sh, (cw - dw) * fx, (ch - dh) * fy, dw, dh);
-      ctx.globalAlpha = 1;
       story.classList.add("is-live");
     }
-    // Draw fractional frame f: frame floor(f), with the next frame blended on top.
+    // Draw whole frame f. Frames are never blended, so every picture on screen is a clean frame of the clip.
     function show(f) {
       if (!seq) return;
-      var i0 = Math.floor(f), a = f - i0, i1 = Math.min(i0 + 1, seq.count - 1);
-      seq.want(Math.round(f));
-      var c0 = seq.touch(i0);
-      if (!c0) {
+      var i = Math.round(f);
+      seq.want(i);
+      var c = seq.touch(i);
+      if (!c) {
         misses++;
-        if (!drawnKey) { var near = seq.nearestReady(i0); if (near) paint(near); }
-        seq.decode(i0).then(function (c) { if (c) { drawnKey = ""; request(); } });
+        if (!drawnKey) { var near = seq.nearestReady(i); if (near) paint(near); }
+        seq.decode(i).then(function (c) { if (c) { drawnKey = ""; request(); } });
       } else {
-        paint(c0);
-        var c1 = a > 0.02 && i1 !== i0 ? seq.touch(i1) : null;
-        if (c1) paint(c1, a);
-        else if (a > 0.02 && i1 !== i0) seq.decode(i1).then(function (c) { if (c) { drawnKey = ""; request(); } });
-        drawnKey = f.toFixed(2);
+        paint(c);
+        drawnKey = String(i);
       }
       // Decode a few tiles ahead in the direction of travel, and one behind.
-      var t0 = seq.tileOf(i0);
+      var t0 = seq.tileOf(i);
       for (var k = 1; k <= 3; k++) {
         var n = t0 + dir * k;
         if (n >= 0 && n < seq.tiles && seq.hasTile(n)) seq.decodeTile(n);
@@ -471,7 +468,7 @@
     }
     function render(t) {
       var f = frameAt(t);
-      if (seq && f.toFixed(2) !== drawnKey) show(f);
+      if (seq && String(Math.round(f)) !== drawnKey) show(f);
       counter.textContent = "TW · 24   ▸ " + String(Math.round(f)).padStart(4, "0");
       bar.style.transform = "scaleX(" + (t / timeline.total).toFixed(4) + ")";
 

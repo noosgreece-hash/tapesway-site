@@ -12,7 +12,7 @@ window.TAPESWAY_CONTENT = {
   brand: {
     name: "TapesWay",
     tagline: "Photo & film for island hospitality", // PLACEHOLDER: confirm positioning
-    logo: "brand/logo-standin.svg", // swap for the chosen logo master
+    logo: "brand/logo-mark-white.svg", // your mark in white, for the dark header, menu and footer (black version and PNGs in brand/)
     logoAlt: "TapesWay"
   },
 
@@ -194,7 +194,7 @@ window.TAPESWAY_CONTENT = {
   },
 
   footer: {
-    note: "Draft site. Copy, contact details and logo are placeholders until confirmed.",
+    note: "Draft site. Copy and contact details are placeholders until confirmed.",
     copyright: "© 2026 TapesWay"
   }
 };

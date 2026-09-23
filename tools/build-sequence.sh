@@ -15,10 +15,11 @@ IN="$1"; VARIANT="$2"; W="${3:-1600}"; Q="${4:-70}"; CROP="${5:-}"
 FPS=24; COLS="${COLS:-2}"; ROWS="${ROWS:-2}"
 cd "$(dirname "$0")/.."
 OUT="media/${VARIANT}.new"; rm -rf "$OUT"; mkdir -p "$OUT"
-VF="fps=${FPS}"; [ -n "$CROP" ] && VF="$VF,$CROP"; VF="$VF,scale=${W}:-2"
-COUNT=$(ffmpeg -v error -i "$IN" -an -vf "$VF" -f framemd5 - | grep -vc "^#")
-ffmpeg -v error -i "$IN" -an -vf "$VF,tile=${COLS}x${ROWS}" -c:v libwebp -quality "$Q" -start_number 0 "$OUT/atlas-%03d.webp"
-ffmpeg -v error -i "$IN" -an -vf "$VF" -frames:v 1 -c:v libwebp -quality 72 "$OUT/poster.webp"
+# Convert to RGB before WebP: handing libwebp BT.709 YUV directly washes the colours out.
+VF="fps=${FPS}"; [ -n "$CROP" ] && VF="$VF,$CROP"; VF="$VF,scale=${W}:-2:flags=lanczos,format=bgra"
+COUNT=$(ffmpeg -v error -i "$IN" -an -vf "fps=${FPS}" -f framemd5 - | grep -vc "^#")
+ffmpeg -v error -i "$IN" -an -vf "$VF,tile=${COLS}x${ROWS}" -c:v libwebp -preset photo -quality "$Q" -start_number 0 "$OUT/atlas-%03d.webp"
+ffmpeg -v error -i "$IN" -an -vf "$VF" -frames:v 1 -c:v libwebp -preset photo -quality 88 "$OUT/poster.webp"
 python3 - "$OUT" "$VARIANT" "$IN" "$FPS" "$COLS" "$ROWS" "$COUNT" <<'PY'
 import json, os, subprocess, sys, glob
 out, variant, src, fps, cols, rows = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6])

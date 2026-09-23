@@ -30,15 +30,17 @@
     .type-meta { margin-top: 14px; font-family: var(--font-mono); font-size: 12px; color: var(--muted); letter-spacing: .06em; }
     .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
     .logos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .logos figure { margin: 0; background: #F6EFE4; border: 1px solid var(--line); border-radius: var(--radius); }
-    .logos img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #F6EFE4; }
-    .logos figcaption { padding: 12px 14px; font-size: 14px; border-top: 1px solid var(--line); }
+    .logos figure { margin: 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; }
+    .logos figure > img, .lockup-row { width: 100%; aspect-ratio: 4 / 3; box-sizing: border-box; padding: 12%; object-fit: contain; }
+    .logos .on-cream > img { background: #F6EFE4; }
+    .logos .on-ink > img { background: var(--ink); }
+    .lockup-row { background: var(--ink); color: var(--cream); display: flex; align-items: center; justify-content: center; gap: 12px; padding: 0; }
+    .lockup-row img { height: 36px; width: auto; }
+    .lockup-row span { font-family: var(--font-display); font-size: 22px; font-weight: 420; font-variation-settings: "opsz" 72, "SOFT" 60; letter-spacing: -0.01em; }
+    .logos figcaption { padding: 12px 14px; font-size: 14px; border-top: 1px solid var(--line); background: var(--paper, #FBF8F2); flex: 1; }
     .logos figcaption b { display: block; }
     .logos figcaption span { color: var(--muted); font-size: 13px; }
     @media (max-width: 899px) { .logos { grid-template-columns: 1fr; } }
-    .standin { display: flex; align-items: center; gap: 16px; margin-top: 20px; padding: 16px; background: var(--ink); border-radius: var(--radius); color: var(--cream); }
-    .standin img { width: 44px; height: 44px; }
-    .standin span { font-family: var(--font-display); font-size: 30px; }
     .imagery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
     .imagery p { margin-top: 10px; font-size: 14px; color: var(--muted-dark); }
     @media (max-width: 899px) { .imagery { grid-template-columns: 1fr; } }
@@ -57,22 +59,21 @@
 
     <div class="grid">
       <section class="panel wide">
-        <h2>Logo concepts (Higgsfield · Recraft V4.1 vector)</h2>
+        <h2>Logo</h2>
         <div class="logos">
-          <figure>
-            <img src="https://d8j0ntlcm91z4.cloudfront.net/user_3JjRrVOosJEDJrj0jQqr3e9NdEA/hf_20260923_193320_20add5e3-f5e6-4f75-9d94-260bfa0f7370.svg" alt="Concept A: aperture blades forming a film reel, with a serif TapesWay wordmark." loading="lazy">
-            <figcaption><b>A · Aperture reel</b><span>Lens aperture that doubles as a film reel, high-contrast serif wordmark.</span></figcaption>
+          <figure class="on-cream">
+            <img src="brand/logo-mark-black.svg" alt="TapesWay mark in black.">
+            <figcaption><b>Black on light</b><span>For cream, paper and photography with light skies.</span></figcaption>
           </figure>
-          <figure>
-            <img src="https://d8j0ntlcm91z4.cloudfront.net/user_3JjRrVOosJEDJrj0jQqr3e9NdEA/hf_20260923_193321_9078dad5-7f81-4f4f-8fec-660cafee81fb.svg" alt="Concept B: a strip of film curving like a cliffside path, with a spaced sans-serif wordmark." loading="lazy">
-            <figcaption><b>B · Film path</b><span>Film strip bending like a caldera path, spaced geometric capitals.</span></figcaption>
+          <figure class="on-ink">
+            <img src="brand/logo-mark-white.svg" alt="TapesWay mark in white.">
+            <figcaption><b>White on dark</b><span>Used in the site header, menu and footer.</span></figcaption>
           </figure>
-          <figure>
-            <img src="https://d8j0ntlcm91z4.cloudfront.net/user_3JjRrVOosJEDJrj0jQqr3e9NdEA/hf_20260923_193320_aa1b6fdc-bb10-427f-9ded-8fba89e218c6.svg" alt="Concept C: viewfinder brackets around a setting sun on the horizon, with a serif wordmark." loading="lazy">
-            <figcaption><b>C · Sunset frame</b><span>Viewfinder corners around a setting sun, refined serif wordmark.</span></figcaption>
+          <figure class="lockup">
+            <div class="lockup-row"><img src="brand/logo-mark-white.svg" alt=""><span>TapesWay</span></div>
+            <figcaption><b>Header lockup</b><span>Mark at 36 px high (32 px on phones), 12 px gap, Fraunces wordmark.</span></figcaption>
           </figure>
         </div>
-        <div class="standin"><img src="brand/symbol-standin.svg" alt=""><span>TapesWay</span><small style="margin-left:auto;font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;color:var(--brass)">STAND-IN MARK USED ON THE SITE UNTIL A CONCEPT IS CHOSEN</small></div>
       </section>
 
       <section class="panel">

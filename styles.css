@@ -155,12 +155,13 @@ em.accent { font-style: italic; color: var(--bloom); }
   border-bottom: 1px solid var(--line-dark);
 }
 .brand {
-  display: inline-flex; align-items: center; gap: 10px;
+  display: inline-flex; align-items: center; gap: 12px;
   text-decoration: none; color: var(--cream);
   min-height: 44px;
 }
 .brand:hover { color: var(--cream); }
-.brand img { width: 30px; height: 30px; }
+/* The mark is taller than wide (0.884); size by height so it never distorts. */
+.brand img { height: 36px; width: auto; display: block; }
 .brand span {
   font-family: var(--font-display);
   font-size: 22px; font-weight: 420;
@@ -186,7 +187,8 @@ em.accent { font-style: italic; color: var(--bloom); }
   .site-nav { display: none; }
   .menu-button { display: inline-flex; }
   .brand span { font-size: 20px; }
-  .brand img { width: 26px; height: 26px; }
+  .brand img { height: 32px; }
+  .brand { gap: 10px; }
 }
 
 /* ---------- Menu (mobile) ---------- */
@@ -552,7 +554,7 @@ html.no-motion .story-static { display: block; }
 .footer-row nav { display: flex; flex-wrap: wrap; gap: 8px 24px; }
 .footer-row nav a { text-decoration: none; color: var(--cream); min-height: 44px; display: inline-flex; align-items: center; }
 .footer-row nav a:hover { color: var(--brass); }
-.site-footer .brand img { width: 28px; height: 28px; }
+.site-footer .brand img { height: 40px; }
 
 /* Reveal-on-scroll for ordinary sections (skipped for reduced motion) */
 html.motion .reveal { opacity: 0; transform: translateY(18px); transition: opacity .8s var(--ease), transform .8s var(--ease); }

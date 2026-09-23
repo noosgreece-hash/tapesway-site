@@ -35,7 +35,9 @@ Safety rules in `app.js`: anything that would be taller than the screen does not
 Headings use Noto Serif Display and body text Inter Tight, both with full Greek. Fraunces (Latin only) sets the tapesway wordmark, the lettering on the table and the numerals. Each family ships as separate Greek and Latin files, and the browser fetches only what a page uses. Labels are in sentence case on purpose, because upper-casing Greek misplaces accents in some browsers.
 
 ## Loading screen
-When the film will play, a loading screen with the logo covers the page until every frame has downloaded and the opening frames are ready, so scrolling is smooth from the start. It gives up waiting after 12 seconds (`PRELOAD_MAX` in `app.js`) and lets the rest stream in. It is skipped for reduced motion.
+When the film will play, a loading screen with the logo covers the page only until the first seconds of film are ready (the first 6 tiles, plus the rest if it would arrive within 4 seconds). `index.html` preloads the first tiles for the right screen size. It gives up after 3.5 seconds (`PRELOAD_MAX` in `app.js`), and the CSS failsafe lifts it after 8. The rest streams in behind the visitor: the tiles just ahead of the current frame first, then the rest in playback order, or coarse to fine (every 4th tile, then every 2nd) when the measured connection is slow. It is skipped for reduced motion.
+
+Deployment: `vercel.json` sets browser caching (film and brand files for a day to a week, fonts for 30 days, code always revalidated) and `.vercelignore` keeps `source/` (the 21 MB original clip), `tools/` and `docs/` off the public site. If you replace the film, keep the new file names or expect returning visitors to see the old frames for up to a day.
 
 The page always opens at the very top, before the story: a reload does not restore the previous scroll position, and a link such as `#contact` opens at the top too (the menu links still jump within the page).
 

@@ -273,7 +273,7 @@ html.motion .preloader {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px;
   background: var(--ink);
   transition: opacity .6s var(--ease), visibility 0s linear .6s;
-  animation: preloader-failsafe 0s linear 20s forwards; /* never strands the page if the script fails */
+  animation: preloader-failsafe 0s linear 8s forwards; /* never strands the page if the script fails */
 }
 html.motion .preloader.is-done { opacity: 0; visibility: hidden; }
 .preloader img { height: 60px; width: auto; animation: breathe 2.4s ease-in-out infinite; }

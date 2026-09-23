@@ -308,6 +308,8 @@
     this.onframe = null;                        // called when a wanted tile arrives
     this.onfatal = null;
     this.onprogress = null;                     // called with (loaded, total) as tiles arrive
+    this.bytes = 0;                             // downloaded so far, to estimate the connection speed
+    this.started = Date.now();
   }
   Sequence.prototype.tileOf = function (f) { return Math.floor(f / this.per); };
   Sequence.prototype.url = function (t) {
@@ -323,13 +325,23 @@
   };
   Sequence.prototype.want = function (f) { this.frame = f; this.target = this.tileOf(f); this.pump(); };
   Sequence.prototype.nextTile = function () {
-    // The needed tile and its neighbours first, then straight on in playback
-    // order, so the whole clip streams in the order it will be watched.
-    var t = this.target, n = this.tiles, i;
-    for (i = Math.max(t - 1, 0); i <= Math.min(t + 2, n - 1); i++) if (this.ok(i)) return i;
-    for (i = t + 3; i < n; i++) if (this.ok(i)) return i;
+    // The needed tile and the next few first. Then the rest of the clip in
+    // playback order, unless the connection is slow (the rest would take more
+    // than a few seconds): then coarse to fine, every 4th tile ahead, then
+    // every 2nd, then all of them, so fast scrolling still finds a nearby
+    // frame while the gaps fill in.
+    var t = this.target, n = this.tiles, i, step;
+    for (i = Math.max(t - 1, 0); i <= Math.min(t + 5, n - 1); i++) if (this.ok(i)) return i;
+    for (step = this.slow() ? 4 : 1; step >= 1; step >>= 1)
+      for (i = t + 6; i < n; i++) if (i % step === 0 && this.ok(i)) return i;
     for (i = t - 2; i >= 0; i--) if (this.ok(i)) return i;
     return -1;
+  };
+  Sequence.prototype.slow = function () {
+    var ms = Date.now() - this.started;
+    if (this.bytes < 262144 || ms < 300) return false;   // too early to tell
+    var left = Math.max(0, (this.m.totalBytes || 0) - this.bytes);
+    return left / (this.bytes / ms) > 6000;
   };
   Sequence.prototype.ok = function (t) { return !this.blobs[t] && this.state[t] === 0; };
   Sequence.prototype.pump = function () {
@@ -352,6 +364,7 @@
         self.blobs[t] = b;
         self.state[t] = 0;
         self.loaded++;
+        self.bytes += b.size;
         if (self.onprogress) self.onprogress(self.loaded, self.tiles);
         if (Math.abs(t - self.target) <= 1 && self.onframe) self.onframe(t);
       })
@@ -408,8 +421,10 @@
   Sequence.prototype.nearestReady = function (f) {
     var t = this.tileOf(f);
     for (var d = 1; d < 16; d++) {
-      if (this.bitmaps.has(t - d)) return this.cell(this.bitmaps.get(t - d), (t - d + 1) * this.per - 1);
-      if (this.bitmaps.has(t + d)) return this.cell(this.bitmaps.get(t + d), (t + d) * this.per);
+      var c = null;
+      if (this.bitmaps.has(t - d)) c = this.cell(this.bitmaps.get(t - d), (t - d + 1) * this.per - 1);
+      else if (this.bitmaps.has(t + d)) c = this.cell(this.bitmaps.get(t + d), (t + d) * this.per);
+      if (c) { c.gap = d; return c; }
     }
     return null;
   };
@@ -434,16 +449,18 @@
     // visitor stops scrolling the film glides to rest instead of halting.
     // Lower OMEGA = longer, softer glide (settles in about 6.6 / OMEGA seconds).
     var OMEGA = 6.5, JUMP = 1.0; // JUMP: target moves further than this (viewport heights) in one frame = cut, not glide
-    var misses = 0, targetT = 0, shownT = -1, velT = 0, prevTarget = -1, lastNow = 0, running = false, drawnKey = "";
+    var misses = 0, gapSum = 0, targetT = 0, shownT = -1, velT = 0, prevTarget = -1, lastNow = 0, running = false, drawnKey = "";
 
     function motionOn() { return root.classList.contains("motion"); }
 
-    // Preloader: the logo and a progress line cover the page while the film
-    // downloads, so playback is smooth from the first scroll. It lifts when every
-    // frame is in and the opening frames are decoded, or after PRELOAD_MAX ms.
-    var PRELOAD_MAX = 12000;
+    // Preloader: the logo and a progress line cover the page only until the
+    // film has a head start. It lifts once the opening frames are decoded and
+    // the rest is on course to arrive within a few seconds (frames stream on in
+    // playback order while the visitor scrolls), and never waits longer than
+    // PRELOAD_MAX ms. On a fast connection that is well under a second.
+    var PRELOAD_MAX = 3500, HEAD_START = 6, REST_WITHIN = 4000;
     var pre = $(".preloader"), preBar = pre ? $("b", pre) : null;
-    var preDone = !pre || !motionOn();
+    var preDone = !pre || !motionOn(), openingReady = false;
     function preloadDone() {
       if (pre) pre.classList.add("is-done");
       root.classList.remove("is-preloading");
@@ -455,10 +472,17 @@
     else { root.classList.add("is-preloading"); setTimeout(preloadDone, PRELOAD_MAX); }
     function preloadProgress(loaded, total) {
       if (preDone) return;
-      if (preBar) preBar.style.transform = "scaleX(" + (loaded / total).toFixed(3) + ")";
-      if (loaded < total) return;
-      var s = seq, first = [];
-      for (var t = 0; t < Math.min(4, s.tiles); t++) first.push(s.decodeTile(t));
+      var s = seq, need = Math.min(HEAD_START, s.tiles);
+      if (preBar) preBar.style.transform = "scaleX(" + Math.min(1, loaded / need).toFixed(3) + ")";
+      for (var t = 0; t < need; t++) if (!s.hasTile(t)) return;
+      // Bytes still to come, and how long they should take at the speed seen so far.
+      var left = Math.max(0, (s.m.totalBytes || s.bytes / loaded * total) - s.bytes);
+      var rate = s.bytes / Math.max(1, Date.now() - s.started);
+      if (loaded < total && left / rate > REST_WITHIN) return;
+      if (openingReady) return;
+      openingReady = true;
+      var first = [];
+      for (t = 0; t < Math.min(4, s.tiles); t++) first.push(s.decodeTile(t));
       Promise.all(first).then(function () { if (s === seq) preloadDone(); });
     }
 
@@ -546,7 +570,9 @@
       var c = seq.touch(i);
       if (!c) {
         misses++;
-        if (!drawnKey) { var near = seq.nearestReady(i); if (near) { paint(near); setTitleFrame(-1); } }
+        var near = seq.nearestReady(i);
+        gapSum += near ? Math.min(near.gap, 16) : 16;
+        if (!drawnKey && near) { paint(near); setTitleFrame(-1); }
         seq.decode(i).then(function (c) { if (c) { drawnKey = ""; request(); } });
       } else {
         paint(c);
@@ -667,6 +693,7 @@
       get frame() { return seq ? seq.frame : -1; },
       get settled() { return !running; },
       get misses() { return misses; },
+      get gapSum() { return gapSum; },
       get total() { return timeline ? timeline.total : 0; },
       get loaded() { return seq ? seq.blobs.filter(Boolean).length : 0; },
       get tiles() { return seq ? seq.tiles : 0; },

@@ -1,0 +1,6 @@
+# Working files that should never be served on tapesway.com.
+source/
+tools/
+docs/
+style-tile.html
+README.md

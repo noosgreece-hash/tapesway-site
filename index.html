@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>tapesway · Περιεχόμενο που δημιουργεί επιθυμία</title>
+  <meta name="description" content="Δημιουργούμε περιεχόμενο για επιχειρήσεις στα ελληνικά νησιά που θέλουν να ξεχωρίζουν, να δημιουργούν εμπιστοσύνη και να μετατρέπουν το ενδιαφέρον των επισκεπτών σε πραγματικές επισκέψεις.">
+  <meta name="theme-color" content="#111318">
+  <link rel="icon" href="brand/favicon-64.png" type="image/png" sizes="64x64">
+  <link rel="apple-touch-icon" href="brand/apple-touch-icon.png">
+  <link rel="preload" href="fonts/noto-serif-display-greek-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/inter-tight-greek-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/fraunces-latin-full-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <!-- The film's opening frames, fetched while the page itself loads (same queries as MOBILE_MQ in app.js). -->
+  <link rel="preload" href="media/desktop/atlas-000.webp" as="fetch" crossorigin media="(min-width: 768px) and (min-aspect-ratio: 4/5) and (prefers-reduced-motion: no-preference)">
+  <link rel="preload" href="media/desktop/atlas-001.webp" as="fetch" crossorigin media="(min-width: 768px) and (min-aspect-ratio: 4/5) and (prefers-reduced-motion: no-preference)">
+  <link rel="preload" href="media/mobile/atlas-000.webp" as="fetch" crossorigin media="((max-width: 767px) or (max-aspect-ratio: 4/5)) and (prefers-reduced-motion: no-preference)">
+  <!-- The film's opening frames, fetched while the page itself loads (same queries as MOBILE_MQ in app.js). -->
+  <script>
+    // Decide, before anything paints, whether the scroll animation should run.
+    (function () {
+      var d = document.documentElement;
+      var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var c = navigator.connection || {};
+      var constrained = c.saveData === true || /(^|-)2g$/.test(c.effectiveType || "");
+      var query = new URLSearchParams(location.search);
+      if (query.get("motion") === "off") reduce = true;
+      d.classList.add("js");
+      d.classList.add(reduce || constrained ? "no-motion" : "motion");
+      // Always open at the very top, before the story: no restored scroll position, no jump to a #section.
+      try {
+        if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+        if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#intro">Μετάβαση στο περιεχόμενο</a>
+
+  <!-- Shown only when the film will play; app.js lifts it once the frames are loaded. -->
+  <div class="preloader" aria-hidden="true">
+    <img src="brand/logo-mark-white.svg" alt="" width="53" height="60">
+    <div class="preloader-bar"><b></b></div>
+  </div>
+
+  <!-- Fixed header lives outside the story so it never scrolls away with it. -->
+  <header class="site-header" data-render="header"></header>
+  <div class="menu" id="site-menu" data-render="menu" hidden></div>
+
+  <!-- Every section is filled from content.js by app.js. -->
+  <main id="main">
+    <section id="story" class="story" aria-label="Η ιστορία της tapesway" data-render="story">
+      <noscript>
+        <div class="story-noscript">
+          <img src="media/stills/open-1600.webp" alt="Μια vintage φωτογραφική μηχανή σε λευκή βεράντα στο ηλιοβασίλεμα, με θέα τη θάλασσα.">
+          <h1>tapesway</h1>
+          <p>Περιεχόμενο με σκοπό για επιχειρήσεις στα ελληνικά νησιά. Ενεργοποιήστε τη JavaScript για να δείτε ολόκληρη τη σελίδα, ή γράψτε μας στο <a href="mailto:hello@tapesway.com">hello@tapesway.com</a>.</p>
+        </div>
+      </noscript>
+    </section>
+    <section id="intro" class="section section--intro" aria-labelledby="intro-title" data-render="intro"></section>
+    <section id="offer" class="section section--offer" aria-labelledby="offer-title" data-render="offer"></section>
+    <section id="approach" class="section section--approach on-dark" aria-labelledby="approach-title" data-render="approach"></section>
+    <section id="languages" class="section section--languages" aria-labelledby="languages-title" data-render="languages"></section>
+    <section id="work" class="section section--work on-dark" aria-labelledby="work-title" data-render="work"></section>
+    <section id="process" class="section section--process" aria-labelledby="process-title" data-render="process"></section>
+    <section id="time" class="section section--time" aria-labelledby="time-title" data-render="time"></section>
+    <section id="value" class="section section--value" aria-labelledby="value-title" data-render="value"></section>
+    <section id="contact" class="section section--contact" aria-labelledby="contact-title" data-render="contact"></section>
+  </main>
+
+  <footer class="site-footer" data-render="footer"></footer>
+
+  <script src="content.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

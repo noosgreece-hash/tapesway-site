@@ -25,81 +25,38 @@ window.TAPESWAY_CONTENT = {
   navCta: { label: "Book a shoot", href: "#contact" },
 
   /*
-    Scroll story. Each chapter's copy is tied to a beat of the pacing plan
-    below. "mobileTitle" / "mobileText" replace the desktop words on phones;
-    leave them out to reuse the desktop copy, or set to "" to hide.
+    Scroll story. The film plays with no text over it. "skipLabel" is only
+    shown to keyboard users, who can jump past the story.
   */
   story: {
     skipLabel: "Skip the story",
-    skipHref: "#services",
-    hero: {
-      eyebrow: "Photo & film · Cyclades",
-      title: "Every place has a golden hour.",
-      mobileTitle: "Every place has a golden hour.",
-      text: "We photograph and film hotels, restaurants and villas across the Cyclades, so guests fall for the place before they book.",
-      mobileText: "",
-      primary: { label: "Book a shoot", href: "#contact" },
-      secondary: { label: "What we make", href: "#services" },
-      scrollCue: "Scroll to roll the film"
-    },
-    frames: [
-      {
-        index: "01 / 03",
-        title: "Terraces, set for dinner.",
-        text: "Tables, linen and low sun, photographed the way guests will find them at eight.",
-        mobileText: ""
-      },
-      {
-        index: "02 / 03",
-        title: "The view they book for.",
-        text: "Caldera, sea and bougainvillea, framed from the tables that face them.",
-        mobileText: ""
-      },
-      {
-        index: "03 / 03",
-        title: "Rooms by candlelight.",
-        text: "Interiors shot in the warm hour, lit to feel like arriving.",
-        mobileText: ""
-      }
-    ],
-    finale: {
-      eyebrow: "Shot on location",
-      title: "Your place, on film.",
-      text: "Stills, short films and scroll stories like this one, delivered ready for your website, booking pages and social.",
-      mobileText: "Stills, films and scroll stories, ready for your site and bookings.",
-      primary: { label: "Book a shoot", href: "#contact" },
-      secondary: { label: "What we deliver", href: "#services" }
-    }
+    skipHref: "#services"
   },
 
   /*
-    Scroll pacing, in viewport heights of scrolling per beat.
-    "from"/"to" are seconds in the source clip, so the same plan works for the
-    landscape and portrait sequences. A beat where from === to is a still hold.
-    "copy" names which story copy is on screen during that beat.
+    Scroll pacing, in viewport heights of scrolling per beat. Smaller numbers
+    play faster. "from"/"to" are seconds in the source clip, so the same plan
+    works for the landscape and portrait sequences. A beat where from === to
+    is a still hold.
   */
   pacing: {
     desktop: [
-      { id: "open-hold",  vh: 0.7, from: 0.0,  to: 0.0,  copy: "hero" },
-      { id: "push-in",    vh: 1.5, from: 0.0,  to: 3.0 },
-      { id: "inside",     vh: 1.0, from: 3.0,  to: 4.15 },
-      { id: "frame-1",    vh: 1.2, from: 4.15, to: 5.3,  copy: "frame-0" },
-      { id: "frame-2",    vh: 1.2, from: 5.3,  to: 6.55, copy: "frame-1" },
-      { id: "frame-3",    vh: 1.2, from: 6.55, to: 7.9,  copy: "frame-2" },
-      { id: "pull-out",   vh: 1.0, from: 7.9,  to: 9.25 },
-      { id: "reveal",     vh: 1.4, from: 9.25, to: 12.0 },
-      { id: "final-hold", vh: 0.9, from: 12.0, to: 12.0, copy: "finale" }
+      { id: "open-hold",  vh: 0.15, from: 0.0,  to: 0.0 },
+      { id: "push-in",    vh: 1.2,  from: 0.0,  to: 3.0 },
+      { id: "inside",     vh: 0.5,  from: 3.0,  to: 4.15 },
+      { id: "film-strip", vh: 1.9,  from: 4.15, to: 7.9 },
+      { id: "pull-out",   vh: 0.6,  from: 7.9,  to: 9.25 },
+      { id: "reveal",     vh: 1.05, from: 9.25, to: 12.0 },
+      { id: "final-hold", vh: 0.2,  from: 12.0, to: 12.0 }
     ],
     mobile: [
-      { id: "open-hold",  vh: 0.35, from: 0.0,  to: 0.0,  copy: "hero" },
-      { id: "push-in",    vh: 0.9,  from: 0.0,  to: 3.0 },
-      { id: "inside",     vh: 0.55, from: 3.0,  to: 4.15 },
-      { id: "frame-1",    vh: 0.8,  from: 4.15, to: 5.3,  copy: "frame-0" },
-      { id: "frame-2",    vh: 0.8,  from: 5.3,  to: 6.55, copy: "frame-1" },
-      { id: "frame-3",    vh: 0.8,  from: 6.55, to: 7.9,  copy: "frame-2" },
-      { id: "pull-out",   vh: 0.6,  from: 7.9,  to: 9.25 },
-      { id: "reveal",     vh: 1.0,  from: 9.25, to: 12.0 },
-      { id: "final-hold", vh: 0.5,  from: 12.0, to: 12.0, copy: "finale" }
+      { id: "open-hold",  vh: 0.1,  from: 0.0,  to: 0.0 },
+      { id: "push-in",    vh: 0.8,  from: 0.0,  to: 3.0 },
+      { id: "inside",     vh: 0.35, from: 3.0,  to: 4.15 },
+      { id: "film-strip", vh: 1.25, from: 4.15, to: 7.9 },
+      { id: "pull-out",   vh: 0.45, from: 7.9,  to: 9.25 },
+      { id: "reveal",     vh: 0.7,  from: 9.25, to: 12.0 },
+      { id: "final-hold", vh: 0.15, from: 12.0, to: 12.0 }
     ]
   },
 
@@ -107,7 +64,7 @@ window.TAPESWAY_CONTENT = {
   media: {
     desktop: { manifest: "media/desktop/manifest.json" },
     mobile: { manifest: "media/mobile/manifest.json" },
-    // Composed stills used for reduced motion, slow connections and load failures.
+    // Stills used for reduced motion, slow connections and load failures (images only, no text).
     stills: {
       hero: { src: "media/stills/open", alt: "A vintage folding camera on a white terrace at sunset, facing the sea." },
       frame: { src: "media/stills/terrace", alt: "A strip of film showing a restaurant terrace dressed with white tablecloths under bougainvillea." },

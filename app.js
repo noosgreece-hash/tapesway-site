@@ -24,13 +24,6 @@
     var withArrow = /primary|light/.test(cls);
     return '<a class="btn ' + cls + '" href="' + esc(link.href) + '">' + esc(link.label) + (withArrow ? " " + ARROW : "") + "</a>";
   }
-  // Desktop words plus an optional phone-specific version (see content.js).
-  function variant(tag, cls, desk, mob) {
-    if (mob === undefined || mob === desk) return desk ? "<" + tag + ' class="' + cls + '">' + esc(desk) + "</" + tag + ">" : "";
-    var out = desk ? "<" + tag + ' class="' + cls + ' d-only">' + esc(desk) + "</" + tag + ">" : "";
-    if (mob) out += "<" + tag + ' class="' + cls + ' m-only">' + esc(mob) + "</" + tag + ">";
-    return out;
-  }
   function picture(base, alt, sizes, eager) {
     if (/\.(webp|jpe?g|png|avif)$/i.test(base)) // a single file, used as-is
       return '<picture><img src="' + esc(base) + '" alt="' + esc(alt) + '"' + (eager ? "" : ' loading="lazy"') + ' decoding="async"></picture>';
@@ -70,55 +63,26 @@
   }
 
   function renderStory() {
-    var S = C.story, M = C.media;
-    var frames = S.frames.map(function (f, i) {
-      return '<div class="story-copy copy-frame" data-copy="frame-' + i + '">' +
-        '<span class="index">' + esc(f.index) + "</span>" +
-        variant("h2", "", f.title, f.mobileTitle) +
-        variant("p", "", f.text, f.mobileText) + "</div>";
-    }).join("");
-
-    var staticFrames = S.frames.map(function (f) {
-      return '<div><span class="index">' + esc(f.index) + "</span><h3>" + esc(f.title) + "</h3><p>" + esc(f.text) + "</p></div>";
-    }).join("");
-
+    var S = C.story, st = C.media.stills;
     $('[data-render="story"]').innerHTML =
+      '<h1 class="sr-only">' + esc(C.brand.name) + "</h1>" +
       '<div class="story-track">' +
         '<div class="story-stage">' +
           '<picture class="story-poster">' +
             '<source media="' + MOBILE_MQ + '" srcset="media/mobile/poster.webp">' +
-            '<img src="media/desktop/poster.webp" alt="' + esc(M.stills.hero.alt) + '" fetchpriority="high" decoding="async">' +
+            '<img src="media/desktop/poster.webp" alt="' + esc(st.hero.alt) + '" fetchpriority="high" decoding="async">' +
           "</picture>" +
           '<canvas class="story-canvas" aria-hidden="true"></canvas>' +
-          '<div class="story-copy copy-hero" data-copy="hero">' +
-            eyebrow(S.hero.eyebrow) +
-            variant("h1", "", S.hero.title, S.hero.mobileTitle) +
-            variant("p", "", S.hero.text, S.hero.mobileText) +
-            '<div class="story-actions">' + btn(S.hero.primary, "btn--primary") + btn(S.hero.secondary, "btn--ghost") + "</div>" +
-          "</div>" +
-          '<div class="hero-wash" data-copy="hero-wash" aria-hidden="true"></div>' +
-          '<div class="scroll-cue" data-copy="hero-cue" aria-hidden="true"><span>' + esc(S.hero.scrollCue) + "</span><i></i></div>" +
-          frames +
-          '<div class="story-copy copy-finale" data-copy="finale">' +
-            eyebrow(S.finale.eyebrow) +
-            variant("h2", "", S.finale.title, S.finale.mobileTitle) +
-            variant("p", "", S.finale.text, S.finale.mobileText) +
-            '<div class="story-actions">' + btn(S.finale.primary, "btn--primary") + btn(S.finale.secondary, "btn--ghost") + "</div>" +
-          "</div>" +
-          '<div class="story-hud" aria-hidden="true"><div class="story-counter"></div><div class="story-progress"><b></b></div></div>' +
+          '<div class="scroll-cue" data-copy="cue" aria-hidden="true"><i></i></div>' +
+          '<div class="story-hud" aria-hidden="true"><div class="story-progress"><b></b></div></div>' +
           '<a class="story-skip" href="' + esc(S.skipHref) + '">' + esc(S.skipLabel) + ' <span aria-hidden="true">↓</span></a>' +
         "</div>" +
       "</div>" +
-      // Composed, motion-free version of the same story.
-      '<div class="story-static on-dark">' +
-        '<div class="static-chapter">' + picture(M.stills.hero.src, M.stills.hero.alt, "100vw", true) +
-          '<div class="static-copy">' + eyebrow(S.hero.eyebrow) + "<h1>" + esc(S.hero.title) + "</h1><p>" + esc(S.hero.text) + "</p>" +
-          '<div class="story-actions">' + btn(S.hero.primary, "btn--light") + btn(S.hero.secondary, "btn--ghost") + "</div></div></div>" +
-        '<div class="static-chapter">' + picture(M.stills.frame.src, M.stills.frame.alt, "100vw") +
-          '<div class="static-copy"><div class="static-frames">' + staticFrames + "</div></div></div>" +
-        '<div class="static-chapter">' + picture(M.stills.finale.src, M.stills.finale.alt, "100vw") +
-          '<div class="static-copy">' + eyebrow(S.finale.eyebrow) + "<h2>" + esc(S.finale.title) + "</h2><p>" + esc(S.finale.text) + "</p>" +
-          '<div class="story-actions">' + btn(S.finale.primary, "btn--light") + btn(S.finale.secondary, "btn--ghost") + "</div></div></div>" +
+      // Motion-free version: the same story as three stills.
+      '<div class="story-static">' +
+        ["hero", "frame", "finale"].map(function (k, i) {
+          return '<div class="static-chapter">' + picture(st[k].src, st[k].alt, "100vw", i === 0) + "</div>";
+        }).join("") +
       "</div>";
   }
 
@@ -234,7 +198,8 @@
     this.state = new Uint8Array(this.tiles);   // 0 idle, 1 in flight, 2 waiting to retry, 3 failed
     this.attempts = new Uint8Array(this.tiles);
     this.inflight = 0;
-    this.maxInflight = 4;
+    this.maxInflight = 6;
+    this.loaded = 0;
     this.bitmaps = new Map();                   // tile -> bitmap, insertion order = LRU
     this.decoding = new Map();                  // tile -> promise
     var bytes = manifest.width * manifest.height * this.per * 4;
@@ -246,6 +211,7 @@
     this.ctrl = window.AbortController ? new AbortController() : null;
     this.onframe = null;                        // called when a wanted tile arrives
     this.onfatal = null;
+    this.onprogress = null;                     // called with (loaded, total) as tiles arrive
   }
   Sequence.prototype.tileOf = function (f) { return Math.floor(f / this.per); };
   Sequence.prototype.url = function (t) {
@@ -261,18 +227,12 @@
   };
   Sequence.prototype.want = function (f) { this.frame = f; this.target = this.tileOf(f); this.pump(); };
   Sequence.prototype.nextTile = function () {
-    // 1) the needed tile and its neighbours, 2) a coarse pass over the whole
-    // clip so fast jumps land near something, 3) everything else by distance.
-    var t = this.target, n = this.tiles, i, d;
-    for (d = 0; d <= 4; d++) {
-      i = t + d; if (i < n && this.ok(i)) return i;
-      i = t - d; if (i >= 0 && this.ok(i)) return i;
-    }
-    for (i = 0; i < n; i += 4) if (this.ok(i)) return i;
-    for (d = 5; d < n; d++) {
-      i = t + d; if (i < n && this.ok(i)) return i;
-      i = t - d; if (i >= 0 && this.ok(i)) return i;
-    }
+    // The needed tile and its neighbours first, then straight on in playback
+    // order, so the whole clip streams in the order it will be watched.
+    var t = this.target, n = this.tiles, i;
+    for (i = Math.max(t - 1, 0); i <= Math.min(t + 2, n - 1); i++) if (this.ok(i)) return i;
+    for (i = t + 3; i < n; i++) if (this.ok(i)) return i;
+    for (i = t - 2; i >= 0; i--) if (this.ok(i)) return i;
     return -1;
   };
   Sequence.prototype.ok = function (t) { return !this.blobs[t] && this.state[t] === 0; };
@@ -295,6 +255,8 @@
         if (self.dead) return;
         self.blobs[t] = b;
         self.state[t] = 0;
+        self.loaded++;
+        if (self.onprogress) self.onprogress(self.loaded, self.tiles);
         if (Math.abs(t - self.target) <= 1 && self.onframe) self.onframe(t);
       })
       .catch(function (err) {
@@ -367,7 +329,7 @@
   function setupStory() {
     var story = $("#story"), track = $(".story-track"), stage = $(".story-stage");
     var canvas = $(".story-canvas"), ctx = canvas.getContext("2d", { alpha: false });
-    var counter = $(".story-counter"), bar = $(".story-progress b"), progress = $(".story-progress");
+    var bar = $(".story-progress b");
     var skip = $(".story-skip");
     var copies = $$("[data-copy]", stage);
     var seq = null, timeline = null, variantName = null, dir = 1;
@@ -376,8 +338,35 @@
     var misses = 0, TAU = 110, targetT = 0, shownT = -1, lastNow = 0, running = false, drawnKey = "";
 
     function motionOn() { return root.classList.contains("motion"); }
+
+    // Preloader: the logo and a progress line cover the page while the film
+    // downloads, so playback is smooth from the first scroll. It lifts when every
+    // frame is in and the opening frames are decoded, or after PRELOAD_MAX ms.
+    var PRELOAD_MAX = 12000;
+    var pre = $(".preloader"), preBar = pre ? $("b", pre) : null;
+    var deepLink = location.hash && location.hash !== "#story" && location.hash !== "#main";
+    var preDone = !pre || !motionOn() || deepLink;
+    function preloadDone() {
+      if (pre) pre.classList.add("is-done");
+      root.classList.remove("is-preloading");
+      if (preDone) return;
+      preDone = true;
+      request();
+    }
+    if (preDone) preloadDone();
+    else { root.classList.add("is-preloading"); setTimeout(preloadDone, PRELOAD_MAX); }
+    function preloadProgress(loaded, total) {
+      if (preDone) return;
+      if (preBar) preBar.style.transform = "scaleX(" + (loaded / total).toFixed(3) + ")";
+      if (loaded < total) return;
+      var s = seq, first = [];
+      for (var t = 0; t < Math.min(4, s.tiles); t++) first.push(s.decodeTile(t));
+      Promise.all(first).then(function () { if (s === seq) preloadDone(); });
+    }
+
     function fallback() {
       // Loading failed or motion is not wanted: show the composed static story.
+      preloadDone();
       if (seq) { seq.destroy(); seq = null; }
       root.classList.remove("motion");
       root.classList.add("no-motion");
@@ -385,18 +374,11 @@
 
     function buildTimeline(pacing, fps, count) {
       var acc = 0, segs = pacing.map(function (p) {
-        var s = { id: p.id, copy: p.copy, vh: p.vh, start: acc, end: acc + p.vh,
+        var s = { id: p.id, vh: p.vh, start: acc, end: acc + p.vh,
           f0: clamp(Math.round(p.from * fps), 0, count - 1), f1: clamp(Math.round(p.to * fps), 0, count - 1) };
         acc += p.vh; return s;
       });
-      // Where each piece of copy is on screen, in the same units (viewport heights).
-      var windows = {};
-      segs.forEach(function (s) {
-        if (!s.copy) return;
-        var w = windows[s.copy] || (windows[s.copy] = { start: s.start, end: s.end });
-        w.start = Math.min(w.start, s.start); w.end = Math.max(w.end, s.end);
-      });
-      return { segs: segs, total: acc, windows: windows };
+      return { segs: segs, total: acc };
     }
     function frameAt(t) {
       var segs = timeline.segs;
@@ -410,19 +392,8 @@
       return 0;
     }
     function ramp(t, a, b) { return b === a ? (t >= a ? 1 : 0) : clamp((t - a) / (b - a), 0, 1); }
-    function copyOpacity(key, t) {
-      var W = timeline.windows, total = timeline.total;
-      if (key === "hero" || key === "hero-cue" || key === "hero-wash") {
-        var h = W.hero; if (!h) return 0;
-        return 1 - ramp(t, h.end, h.end + (key === "hero-cue" ? 0.15 : 0.35));
-      }
-      if (key === "finale") {
-        var f = W.finale; if (!f) return 0;
-        return ramp(t, f.start - 0.45, f.start - 0.05);
-      }
-      var w = W[key]; if (!w) return 0;
-      return Math.min(ramp(t, w.start - 0.12, w.start + 0.22), 1 - ramp(t, w.end - 0.22, w.end + 0.1 > total ? total : w.end + 0.1));
-    }
+    // The scroll cue fades out as soon as the story starts moving.
+    function copyOpacity(key, t) { return 1 - ramp(t, 0.02, 0.25); }
 
     function sizeCanvas() {
       var dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -452,9 +423,9 @@
         paint(c);
         drawnKey = String(i);
       }
-      // Decode a few tiles ahead in the direction of travel, and one behind.
-      var t0 = seq.tileOf(i);
-      for (var k = 1; k <= 3; k++) {
+      // Decode tiles ahead in the direction of travel, and one behind.
+      var t0 = seq.tileOf(i), ahead = Math.min(6, seq.maxBitmaps - 4);
+      for (var k = 1; k <= ahead; k++) {
         var n = t0 + dir * k;
         if (n >= 0 && n < seq.tiles && seq.hasTile(n)) seq.decodeTile(n);
       }
@@ -469,20 +440,9 @@
     function render(t) {
       var f = frameAt(t);
       if (seq && String(Math.round(f)) !== drawnKey) show(f);
-      counter.textContent = "TW · 24   ▸ " + String(Math.round(f)).padStart(4, "0");
       bar.style.transform = "scaleX(" + (t / timeline.total).toFixed(4) + ")";
 
-      copies.forEach(function (el) {
-        var o = copyOpacity(el.getAttribute("data-copy"), t);
-        el.style.opacity = o.toFixed(3);
-        if (el.classList.contains("story-copy")) el.style.transform = "translate3d(0," + ((1 - o) * 14).toFixed(1) + "px,0)";
-        var hidden = o < 0.5;
-        if (hidden !== el.classList.contains("is-hidden")) {
-          el.classList.toggle("is-hidden", hidden);
-          // Faded-out copy keeps its text for screen readers but drops out of the tab order.
-          $$("a, button", el).forEach(function (a) { if (hidden) a.setAttribute("tabindex", "-1"); else a.removeAttribute("tabindex"); });
-        }
-      });
+      copies.forEach(function (el) { el.style.opacity = copyOpacity(el.getAttribute("data-copy"), t).toFixed(3); });
       var nearEnd = t > timeline.total - 0.35 || track.getBoundingClientRect().bottom < window.innerHeight * 0.5;
       skip.classList.toggle("is-hidden", nearEnd);
       if (nearEnd) skip.setAttribute("tabindex", "-1"); else skip.removeAttribute("tabindex");
@@ -506,15 +466,6 @@
     function request() { if (!running) { running = true; requestAnimationFrame(tick); } }
     function update() { request(); }
 
-    function drawTicks() {
-      $$("i", progress).forEach(function (n) { n.remove(); });
-      Object.keys(timeline.windows).forEach(function (k) {
-        var tick = document.createElement("i");
-        tick.style.left = (timeline.windows[k].start / timeline.total * 100) + "%";
-        progress.appendChild(tick);
-      });
-    }
-
     function load(name) {
       if (seq) { seq.destroy(); seq = null; }
       drawnKey = ""; shownT = -1;
@@ -526,7 +477,6 @@
       // Provisional timeline so the page has the right height before the manifest arrives.
       timeline = buildTimeline(pacing, 24, 289);
       track.style.setProperty("--travel", timeline.total);
-      drawTicks();
       request();
       if (!motionOn()) return;
       fetch(src, { cache: "no-cache" }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
@@ -534,10 +484,10 @@
           if (variantName !== name || !motionOn()) return;
           timeline = buildTimeline(pacing, m.fps, m.count);
           track.style.setProperty("--travel", timeline.total);
-          drawTicks();
-          seq = new Sequence(m, base);
+              seq = new Sequence(m, base);
           seq.onframe = function () { drawnKey = ""; request(); };
           seq.onfatal = fallback;
+          seq.onprogress = preloadProgress;
           seq.active = storyNear;
           sizeCanvas();
           update();
@@ -573,7 +523,8 @@
       get total() { return timeline ? timeline.total : 0; },
       get loaded() { return seq ? seq.blobs.filter(Boolean).length : 0; },
       get tiles() { return seq ? seq.tiles : 0; },
-      get decoded() { return seq ? seq.bitmaps.size : 0; }
+      get decoded() { return seq ? seq.bitmaps.size : 0; },
+      get preloaded() { return preDone; }
     };
   }
 

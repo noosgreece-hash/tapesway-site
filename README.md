@@ -15,11 +15,13 @@ Any static host works (GitHub Pages, Netlify, Cloudflare Pages, S3). Opening `in
 - `?motion=off` on the URL previews the reduced-motion version
 
 ## Edit the content
-Everything visitors read is in **`content.js`**: headlines, story captions, services, process, contact details and form labels. Edit the text, save and reload. Items marked `PLACEHOLDER` are assumptions to confirm before going live, including the email address and the location.
+Everything visitors read is in **`content.js`**: headlines, services, process, contact details and form labels. The scroll story itself has no text on it. Edit the text, save and reload. Items marked `PLACEHOLDER` are assumptions to confirm before going live, including the email address and the location.
 
-- **Different words on phones:** set `mobileTitle` / `mobileText` on a story item. Use `""` to hide a line on phones.
-- **Scroll pacing:** `pacing.desktop` and `pacing.mobile` list each beat's scroll distance (`vh`, in viewport heights) and the stretch of the clip it plays (`from`/`to`, in seconds). A beat with `from` equal to `to` is a still hold. `copy` says which caption shows during the beat.
+- **Scroll pacing:** `pacing.desktop` and `pacing.mobile` list each beat's scroll distance (`vh`, in viewport heights) and the stretch of the clip it plays (`from`/`to`, in seconds). A beat with `from` equal to `to` is a still hold. Smaller `vh` numbers play faster. `copy` says which caption shows during the beat.
 - **Contact form:** by default it opens the visitor's email app, addressed to `contact.email`. To receive submissions directly, set `contact.formEndpoint` to a form service URL that accepts POST, such as Formspree.
+
+## Loading screen
+When the film will play, a loading screen with the logo covers the page until every frame has downloaded and the opening frames are ready, so scrolling is smooth from the start. It gives up waiting after 12 seconds (`PRELOAD_MAX` in `app.js`) and lets the rest stream in. It is skipped for reduced motion and for links straight to a section (for example `#contact`).
 
 ## Logo
 The site shows `brand/logo-mark-white.svg` on the dark header, menu and footer (set in `content.js` as `brand.logo`). Use `logo-mark-black.*` on light backgrounds. The mark is sized by height in `styles.css` (`.brand img`: 36 px, 32 px on phones, 40 px in the footer).

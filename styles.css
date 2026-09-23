@@ -223,6 +223,28 @@ em.accent { font-style: italic; color: var(--bloom); }
 .menu-foot { margin-top: 20px; font-family: var(--font-mono); font-size: 12px; color: var(--muted-dark); letter-spacing: .08em; }
 body.menu-open { overflow: hidden; }
 
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ---------- Preloader ---------- */
+.preloader { display: none; }
+html.motion .preloader {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px;
+  background: var(--ink);
+  transition: opacity .6s var(--ease), visibility 0s linear .6s;
+  animation: preloader-failsafe 0s linear 20s forwards; /* never strands the page if the script fails */
+}
+html.motion .preloader.is-done { opacity: 0; visibility: hidden; }
+.preloader img { height: 60px; width: auto; animation: breathe 2.4s ease-in-out infinite; }
+.preloader-bar { width: min(180px, 40vw); height: 2px; background: rgba(246, 239, 228, .14); border-radius: 1px; overflow: hidden; }
+.preloader-bar b { display: block; height: 100%; background: var(--brass); transform: scaleX(0); transform-origin: left; transition: transform .3s linear; }
+@keyframes breathe { 50% { opacity: .55; } }
+@keyframes preloader-failsafe { to { opacity: 0; visibility: hidden; } }
+html.is-preloading, html.is-preloading body { overflow: hidden; }
+
 /* ---------- Scroll story ---------- */
 .story { position: relative; background: var(--ink); }
 .story-track {
@@ -247,97 +269,26 @@ body.menu-open { overflow: hidden; }
 .story-canvas { opacity: 0; transition: opacity .4s ease; }
 .story.is-live .story-canvas { opacity: 1; }
 
-.story-copy {
-  position: absolute; z-index: 3;
-  will-change: opacity, transform;
-}
-.story-copy.is-hidden { pointer-events: none; }
-.story-copy p { font-size: 17px; line-height: 1.5; }
-.story-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
-
-/* 01 — Opening: left of the camera, over the sky and sea */
-.copy-hero {
-  left: var(--gutter);
-  top: calc(var(--header-h) + var(--safe-top) + 10vh);
-  width: min(22vw, 400px);
-  color: var(--ink);
-}
-.copy-hero h1 { font-size: clamp(36px, 3.4vw, 64px); margin: 16px 0 18px; }
-.copy-hero .eyebrow { color: #4a3f39; }
-.copy-hero p { color: #2c2522; font-size: 16px; }
-.copy-hero .story-actions { margin-top: 24px; }
-.hero-wash { display: none; }
-/* Squarer landscape screens: the camera fills more width, so the opening copy sits on a print */
-@media (min-width: 768px) and (min-aspect-ratio: 4/5) and (max-aspect-ratio: 3/2) {
-  .copy-hero {
-    top: auto; bottom: calc(6vh + var(--bar-gap));
-    width: min(44vw, 420px);
-    padding: 24px 26px 26px;
-    background: rgba(246, 239, 228, 0.86);
-    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-    border-radius: var(--radius);
-  }
-  .copy-hero h1 { font-size: clamp(34px, 4.2vw, 48px); margin-top: 10px; }
-  .copy-hero p { display: none; }
-  .scroll-cue { display: none; }
-}
+/* Scroll cue: a line that draws down, no words. Fades as soon as the story starts. */
 .scroll-cue {
-  position: absolute; left: 50%; bottom: calc(28px + var(--bar-gap) + var(--safe-bottom));
+  position: absolute; z-index: 3; left: 50%; bottom: calc(26px + var(--bar-gap) + var(--safe-bottom));
   transform: translateX(-50%);
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
-  font-family: var(--font-mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
-  color: var(--ink);
+  width: 26px; height: 44px; border: 1.5px solid rgba(246, 239, 228, .85); border-radius: 13px;
+  box-shadow: 0 0 0 1px rgba(20, 18, 21, .18), 0 6px 18px rgba(20, 18, 21, .25);
+  pointer-events: none;
 }
 .scroll-cue i {
-  width: 1px; height: 36px; background: linear-gradient(var(--ink), transparent);
-  animation: cue 2.2s var(--ease) infinite;
-  transform-origin: top;
+  position: absolute; left: 50%; top: 8px; width: 2px; height: 8px; margin-left: -1px;
+  border-radius: 1px; background: var(--cream);
+  animation: cue 1.8s var(--ease) infinite;
 }
-@keyframes cue { 0% { transform: scaleY(0); } 60% { transform: scaleY(1); } 100% { transform: scaleY(1); opacity: 0; } }
-
-/* 02 — Film frames: below the strip, in the dark */
-.copy-frame {
-  left: var(--gutter);
-  bottom: calc(9vh + var(--bar-gap));
-  width: min(38vw, 520px);
-  color: var(--cream);
-}
-.copy-frame .index {
-  font-family: var(--font-mono); font-size: 12px; letter-spacing: .16em; color: var(--brass);
-  display: block; margin-bottom: 14px;
-}
-.copy-frame h2 { font-size: clamp(30px, 3vw, 48px); margin-bottom: 12px; }
-.copy-frame p { color: #e2d8cb; max-width: 40ch; }
-
-/* 03 — Finale: frosted print over the sea, camera stays clear */
-.copy-finale {
-  left: var(--gutter);
-  bottom: calc(10vh + var(--bar-gap));
-  width: min(34vw, 470px);
-  padding: 30px 32px 32px;
-  background: rgba(246, 239, 228, 0.84);
-  -webkit-backdrop-filter: blur(14px) saturate(120%);
-  backdrop-filter: blur(14px) saturate(120%);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: var(--radius);
-  color: var(--ink);
-  box-shadow: 0 30px 60px -30px rgba(20, 18, 21, .45);
-}
-.copy-finale h2 { font-size: clamp(34px, 3.4vw, 54px); margin: 14px 0 14px; }
-.copy-finale p { color: #3a322e; }
-.copy-finale .story-actions { margin-top: 24px; }
+@keyframes cue { 0% { transform: translateY(0); opacity: 0; } 25% { opacity: 1; } 80% { transform: translateY(14px); opacity: 0; } 100% { opacity: 0; } }
 
 /* Film-edge HUD */
 .story-hud {
   position: absolute; z-index: 2; left: 0; right: 0;
   bottom: calc(var(--bar-gap));
   pointer-events: none;
-}
-.story-counter {
-  position: absolute; right: var(--gutter); bottom: 22px;
-  font-family: var(--font-mono); font-size: 11px; letter-spacing: .18em;
-  color: var(--cream); opacity: .6;
-  mix-blend-mode: difference;
 }
 .story-progress {
   position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
@@ -347,9 +298,7 @@ body.menu-open { overflow: hidden; }
   position: absolute; inset: 0; transform-origin: left; transform: scaleX(0);
   background: var(--brass);
 }
-.story-progress i {
-  position: absolute; top: -3px; width: 1px; height: 9px; background: rgba(246, 239, 228, .55);
-}
+/* Keyboard-only: appears when focused, so the film itself carries no text. */
 .story-skip {
   position: absolute; z-index: 4;
   right: var(--gutter); top: calc(var(--header-h) + var(--safe-top) + 18px);
@@ -357,14 +306,13 @@ body.menu-open { overflow: hidden; }
   min-height: 44px; padding: 0 16px;
   font: 500 13px/1 var(--font-body); letter-spacing: .02em;
   color: var(--cream); text-decoration: none;
-  background: rgba(20, 18, 21, 0.55);
-  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  background: rgba(20, 18, 21, 0.8);
   border: 1px solid var(--line-dark);
   border-radius: 999px;
-  transition: opacity .3s;
+  opacity: 0; pointer-events: none;
 }
-.story-skip:hover { color: var(--brass); }
-.story-skip.is-hidden { opacity: 0; pointer-events: none; }
+.story-skip:focus-visible { opacity: 1; pointer-events: auto; }
+.story-skip.is-hidden { display: none; }
 
 /* Static story (reduced motion, constrained devices, or loading failure) */
 .story-static { display: none; }
@@ -373,67 +321,11 @@ html.no-motion .story-static { display: block; }
 .story-static { color: var(--cream); padding-top: calc(var(--header-h) + var(--safe-top)); }
 .static-chapter { position: relative; }
 .static-chapter picture img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
-.static-chapter .static-copy {
-  max-width: var(--maxw); margin: 0 auto;
-  padding: 36px var(--gutter) 64px;
-}
-.static-chapter h1, .static-chapter h2 { font-size: clamp(34px, 5vw, 64px); margin: 14px 0 14px; }
-.static-chapter p { color: #e2d8cb; max-width: 52ch; }
-.static-frames { display: grid; gap: 28px; grid-template-columns: repeat(3, 1fr); margin-top: 8px; }
-.static-frames h3 { font-size: 26px; margin: 8px 0 6px; }
-.static-frames .index { font-family: var(--font-mono); font-size: 12px; color: var(--brass); letter-spacing: .14em; }
 .story-noscript { color: var(--cream); padding: calc(var(--header-h) + 40px) var(--gutter) 60px; }
 
 /* ---------- Mobile story composition ---------- */
 @media (max-width: 767px), (max-aspect-ratio: 4/5) {
-  .story-copy p { font-size: 16px; }
-  .copy-hero {
-    left: 20px; right: 20px; width: auto;
-    top: calc(var(--header-h) + var(--safe-top) + 5vh);
-    bottom: calc(22px + var(--bar-gap) + var(--safe-bottom));
-    display: flex; flex-direction: column; justify-content: space-between;
-    text-align: center;
-    pointer-events: none;
-  }
-  .copy-hero > * { pointer-events: auto; }
-  .copy-hero .eyebrow { display: none; }
-  .hero-wash {
-    display: block; position: absolute; z-index: 2; left: 0; right: 0; top: 0; height: 42%;
-    background: linear-gradient(rgba(240, 222, 204, 0.96) 0%, rgba(240, 222, 204, 0.82) 45%, rgba(240, 222, 204, 0) 100%);
-    pointer-events: none;
-  }
-  .copy-hero h1 { font-size: clamp(36px, 10.4vw, 52px); margin: 0 auto; max-width: 11ch; }
-  .copy-hero p:empty { display: none; }
-  .copy-hero .story-actions { margin: auto 0 0; align-self: flex-start; }
-  .copy-hero .story-actions .btn--ghost { display: none; }
-  .scroll-cue { display: none; }
-
-  .copy-frame {
-    left: 20px; right: 20px; width: auto;
-    bottom: calc(96px + var(--bar-gap) + var(--safe-bottom));
-  }
-  .copy-frame h2 { font-size: 30px; margin-bottom: 0; }
-  .copy-frame p:empty { display: none; }
-  .copy-frame .index { margin-bottom: 10px; }
-
-  .copy-finale {
-    left: 16px; right: 16px; width: auto;
-    bottom: calc(16px + var(--bar-gap) + var(--safe-bottom));
-    padding: 22px 20px 20px;
-  }
-  .copy-finale h2 { font-size: 34px; margin: 10px 0 8px; }
-  .copy-finale .story-actions { margin-top: 18px; }
-  .copy-finale .story-actions .btn { flex: 1 1 auto; }
-  .copy-finale .story-actions .btn--ghost { display: none; }
-
-  .story-skip {
-    top: auto; right: 16px;
-    bottom: calc(24px + var(--bar-gap) + var(--safe-bottom));
-    min-height: 44px;
-  }
-  .story-counter { display: none; }
   .static-chapter picture img { aspect-ratio: 4 / 5; }
-  .static-frames { grid-template-columns: 1fr; }
 }
 
 /* ---------- Sections ---------- */
@@ -570,6 +462,4 @@ html.motion .reveal.is-in { opacity: 1; transform: none; }
   .d-only { display: none; }
   .m-only { display: revert; }
 }
-@media (min-width: 768px) and (min-aspect-ratio: 4/5) and (max-aspect-ratio: 3/2) {
-  .scroll-cue { display: none; }
-}
+

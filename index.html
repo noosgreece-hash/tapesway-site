@@ -22,8 +22,10 @@
       d.classList.add("js");
       d.classList.add(reduce || constrained ? "no-motion" : "motion");
       // Always open at the very top, before the story: no restored scroll position, no jump to a #section.
-      if ("scrollRestoration" in history) history.scrollRestoration = "manual";
-      if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+      try {
+        if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+        if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+      } catch (e) {}
     })();
   </script>
   <link rel="stylesheet" href="styles.css">

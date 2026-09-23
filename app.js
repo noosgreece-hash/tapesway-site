@@ -238,7 +238,7 @@
     this.bitmaps = new Map();                   // tile -> bitmap, insertion order = LRU
     this.decoding = new Map();                  // tile -> promise
     var bytes = manifest.width * manifest.height * this.per * 4;
-    this.maxBitmaps = clamp(Math.floor(110e6 / bytes), 4, 40);
+    this.maxBitmaps = clamp(Math.floor(170e6 / bytes), 6, 40);
     this.frame = 0;
     this.target = 0;                            // tile
     this.active = true;
@@ -329,7 +329,7 @@
       while (self.bitmaps.size > self.maxBitmaps && guard-- > 0) {
         var oldest = self.bitmaps.keys().next().value, b = self.bitmaps.get(oldest);
         self.bitmaps.delete(oldest);
-        if (Math.abs(oldest - self.target) <= 1) { self.bitmaps.set(oldest, b); continue; } // keep what is on screen
+        if (Math.abs(oldest - self.target) <= 2) { self.bitmaps.set(oldest, b); continue; } // keep what is on and near screen
         if (b && b.close) b.close();
       }
       return bmp;
@@ -370,7 +370,10 @@
     var counter = $(".story-counter"), bar = $(".story-progress b"), progress = $(".story-progress");
     var skip = $(".story-skip");
     var copies = $$("[data-copy]", stage);
-    var seq = null, timeline = null, variantName = null, drawn = -1, lastT = 0, dir = 1, ticking = false;
+    var seq = null, timeline = null, variantName = null, dir = 1;
+    // Playback eases toward the scroll position (native scrolling is untouched),
+    // so a wheel notch or a flick plays through every in-between frame instead of jumping.
+    var misses = 0, TAU = 110, targetT = 0, shownT = -1, lastNow = 0, running = false, drawnKey = "";
 
     function motionOn() { return root.classList.contains("motion"); }
     function fallback() {
@@ -401,7 +404,7 @@
         var s = segs[k];
         if (t < s.end || k === segs.length - 1) {
           var local = s.vh ? clamp((t - s.start) / s.vh, 0, 1) : 1;
-          return Math.round(s.f0 + (s.f1 - s.f0) * local);
+          return s.f0 + (s.f1 - s.f0) * local; // fractional: blended between frames
         }
       }
       return 0;
@@ -424,41 +427,52 @@
     function sizeCanvas() {
       var dpr = Math.min(window.devicePixelRatio || 1, 2);
       var w = Math.round(stage.clientWidth * dpr), h = Math.round(stage.clientHeight * dpr);
-      if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; drawn = -1; }
+      if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; drawnKey = ""; }
     }
-    function paint(c) {
+    function paint(c, alpha) {
       var cw = canvas.width, ch = canvas.height, iw = c.sw, ih = c.sh;
       var sc = Math.max(cw / iw, ch / ih), dw = iw * sc, dh = ih * sc;
       var fx = seq && seq.m.focalX != null ? seq.m.focalX : 0.5, fy = seq && seq.m.focalY != null ? seq.m.focalY : 0.5;
+      ctx.globalAlpha = alpha == null ? 1 : alpha;
       ctx.drawImage(c.img, c.sx, c.sy, c.sw, c.sh, (cw - dw) * fx, (ch - dh) * fy, dw, dh);
+      ctx.globalAlpha = 1;
       story.classList.add("is-live");
     }
-    function show(i) {
+    // Draw fractional frame f: frame floor(f), with the next frame blended on top.
+    function show(f) {
       if (!seq) return;
-      seq.want(i);
-      var cell = seq.touch(i);
-      if (cell) { if (drawn !== i) { paint(cell); drawn = i; } }
-      else {
-        var near = seq.nearestReady(i);
-        if (near && drawn === -1) paint(near);
-        seq.decode(i).then(function (c) { if (c && seq && seq.frame === i) { paint(c); drawn = i; } });
+      var i0 = Math.floor(f), a = f - i0, i1 = Math.min(i0 + 1, seq.count - 1);
+      seq.want(Math.round(f));
+      var c0 = seq.touch(i0);
+      if (!c0) {
+        misses++;
+        if (!drawnKey) { var near = seq.nearestReady(i0); if (near) paint(near); }
+        seq.decode(i0).then(function (c) { if (c) { drawnKey = ""; request(); } });
+      } else {
+        paint(c0);
+        var c1 = a > 0.02 && i1 !== i0 ? seq.touch(i1) : null;
+        if (c1) paint(c1, a);
+        else if (a > 0.02 && i1 !== i0) seq.decode(i1).then(function (c) { if (c) { drawnKey = ""; request(); } });
+        drawnKey = f.toFixed(2);
       }
-      // Decode the next tile in the direction of travel before it is needed.
-      var next = seq.tileOf(i) + dir;
-      if (next >= 0 && next < seq.tiles && seq.hasTile(next)) seq.decodeTile(next);
+      // Decode a few tiles ahead in the direction of travel, and one behind.
+      var t0 = seq.tileOf(i0);
+      for (var k = 1; k <= 3; k++) {
+        var n = t0 + dir * k;
+        if (n >= 0 && n < seq.tiles && seq.hasTile(n)) seq.decodeTile(n);
+      }
+      if (t0 - dir >= 0 && t0 - dir < seq.tiles && seq.hasTile(t0 - dir)) seq.decodeTile(t0 - dir);
     }
 
-    function update() {
-      ticking = false;
-      if (!timeline) return;
+    function readScroll() {
       var travel = track.offsetHeight - stage.offsetHeight;
       var scrolled = clamp(-track.getBoundingClientRect().top, 0, Math.max(travel, 0));
-      var t = travel > 0 ? (scrolled / travel) * timeline.total : 0;
-      dir = t >= lastT ? 1 : -1; lastT = t;
-
-      var frame = frameAt(t);
-      if (seq) show(frame);
-      counter.textContent = "TW · 24   ▸ " + String(frame).padStart(4, "0");
+      return travel > 0 ? (scrolled / travel) * timeline.total : 0;
+    }
+    function render(t) {
+      var f = frameAt(t);
+      if (seq && f.toFixed(2) !== drawnKey) show(f);
+      counter.textContent = "TW · 24   ▸ " + String(Math.round(f)).padStart(4, "0");
       bar.style.transform = "scaleX(" + (t / timeline.total).toFixed(4) + ")";
 
       copies.forEach(function (el) {
@@ -476,7 +490,24 @@
       skip.classList.toggle("is-hidden", nearEnd);
       if (nearEnd) skip.setAttribute("tabindex", "-1"); else skip.removeAttribute("tabindex");
     }
-    function request() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
+    function tick(now) {
+      if (!timeline) { running = false; return; }
+      targetT = readScroll();
+      if (targetT !== shownT) dir = targetT > shownT ? 1 : -1;
+      // Big jumps (anchor links, skip, first paint) cut straight to the new place.
+      if (shownT < 0 || Math.abs(frameAt(targetT) - frameAt(shownT)) > 90) shownT = targetT;
+      else {
+        var dt = lastNow ? Math.min(now - lastNow, 64) : 16;
+        shownT += (targetT - shownT) * (1 - Math.exp(-dt / TAU));
+        if (Math.abs(targetT - shownT) < 0.0005) shownT = targetT;
+      }
+      lastNow = now;
+      render(shownT);
+      if (shownT !== targetT) requestAnimationFrame(tick);
+      else { running = false; lastNow = 0; }
+    }
+    function request() { if (!running) { running = true; requestAnimationFrame(tick); } }
+    function update() { request(); }
 
     function drawTicks() {
       $$("i", progress).forEach(function (n) { n.remove(); });
@@ -489,7 +520,7 @@
 
     function load(name) {
       if (seq) { seq.destroy(); seq = null; }
-      drawn = -1;
+      drawnKey = ""; shownT = -1;
       story.classList.remove("is-live");
       variantName = name;
       var pacing = C.pacing[name];
@@ -508,7 +539,7 @@
           track.style.setProperty("--travel", timeline.total);
           drawTicks();
           seq = new Sequence(m, base);
-          seq.onframe = function () { drawn = -1; request(); };
+          seq.onframe = function () { drawnKey = ""; request(); };
           seq.onfatal = fallback;
           seq.active = storyNear;
           sizeCanvas();
@@ -540,6 +571,8 @@
     window.__tapesway = {
       get variant() { return variantName; },
       get frame() { return seq ? seq.frame : -1; },
+      get settled() { return !running; },
+      get misses() { return misses; },
       get total() { return timeline ? timeline.total : 0; },
       get loaded() { return seq ? seq.blobs.filter(Boolean).length : 0; },
       get tiles() { return seq ? seq.tiles : 0; },

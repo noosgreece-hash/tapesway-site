@@ -22,9 +22,9 @@ Everything visitors read is in **`content.js`**: headlines, story captions, serv
 - **Contact form:** by default it opens the visitor's email app, addressed to `contact.email`. To receive submissions directly, set `contact.formEndpoint` to a form service URL that accepts POST, such as Formspree.
 
 ## Replace the animation
-The story reads frame atlases (four frames per WebP, 2×2) listed in `media/<variant>/manifest.json`. Desktop uses `media/desktop/`; phones and portrait tablets use `media/mobile/`. The page chooses one before requesting frames. To rebuild from a new clip (needs ffmpeg):
+The story reads frame atlases (several frames per WebP: 2×1 on desktop, 2×2 on phones) listed in `media/<variant>/manifest.json`. Desktop uses `media/desktop/`; phones and portrait tablets use `media/mobile/`. The page chooses one before requesting frames. To rebuild from a new clip (needs ffmpeg):
 ```sh
-tools/build-sequence.sh source/new-clip.mp4 desktop 1600 70
+COLS=2 ROWS=1 tools/build-sequence.sh source/new-clip.mp4 desktop 1920 80
 tools/build-sequence.sh source/new-clip-9x16.mp4 mobile 720 72
 ```
 The script writes to a fresh folder, checks tile count and sizes, writes the manifest and poster, and only then swaps the folder in.

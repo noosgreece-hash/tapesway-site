@@ -4,7 +4,7 @@
 #   tools/build-sequence.sh <input.mp4> <desktop|mobile> [width] [quality] [crop-filter]
 #
 # Examples
-#   tools/build-sequence.sh ../source/tapesway-original-16x9.mp4 desktop 1600 70
+#   COLS=2 ROWS=1 tools/build-sequence.sh ../source/tapesway-original-16x9.mp4 desktop 1920 80
 #   tools/build-sequence.sh ../source/tapesway-reframe-9x16.mp4 mobile 720 72
 #
 # Writes into media/<variant>.new/, checks it, then swaps it in for media/<variant>/.
@@ -12,7 +12,7 @@
 # the request count low; the page reads the layout from manifest.json.
 set -euo pipefail
 IN="$1"; VARIANT="$2"; W="${3:-1600}"; Q="${4:-70}"; CROP="${5:-}"
-FPS=24; COLS=2; ROWS=2
+FPS=24; COLS="${COLS:-2}"; ROWS="${ROWS:-2}"
 cd "$(dirname "$0")/.."
 OUT="media/${VARIANT}.new"; rm -rf "$OUT"; mkdir -p "$OUT"
 VF="fps=${FPS}"; [ -n "$CROP" ] && VF="$VF,$CROP"; VF="$VF,scale=${W}:-2"

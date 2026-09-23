@@ -13,7 +13,7 @@
 | Asset | Origin | Notes |
 |---|---|---|
 | `source/tapesway-original-16x9.mp4` | Supplied by the client | HEVC 1920×1080, 24 fps, 12.04 s, 21.1 MB. Kept unmodified. |
-| `media/desktop/` | Extracted from the original | 289 frames, 1600×900, packed 2×2 into 73 WebP atlases (q70), 7.8 MB |
+| `media/desktop/` | Extracted from the original | 289 frames at full 1920×1080, packed 2×1 into 145 WebP atlases (q80), 12.7 MB |
 | `media/mobile/` | **Interim:** 608×1080 centre crop of the original | 289 frames, 73 atlases (q72), 4.4 MB. The crop drifts 40 px right over 9–12 s to keep the camera centred. To be replaced by the Higgsfield 9:16 reframe. |
 | `media/stills/` | Extracted from the original | Full-frame stills (open, terrace, bloom, room, oia) at 800/1600 px, plus four single film frames cropped at native size for cards and the contact sheet |
 | `brand/symbol-standin.svg` | Hand-built stand-in | Lens ring, setting sun and horizon. Replace with the chosen logo. |
@@ -43,9 +43,10 @@ Why reframe for mobile: it recomposes the same footage to 9:16, so camera geomet
    Re-check the phone screenshots. With real sky above the camera, the mobile hero wash in `styles.css` (`.hero-wash`) can probably be lightened.
 
 ## Measurements
-- Desktop sequence: 7.8 MB over 73 requests; largest atlas 160 KB. Poster 20 KB.
+- Desktop sequence: 12.7 MB over 145 requests; largest atlas 124 KB. Poster 20 KB.
 - Mobile sequence: 4.4 MB over 73 requests; largest atlas 95 KB. Poster 17 KB.
-- Memory: decoded atlases capped at about 110 MB (4 desktop atlases, which is 16 frames; 10 mobile atlases). Least-recently-used atlases are closed.
+- Memory: decoded atlases are capped at about 170 MB (10 desktop atlases, which is 20 frames; 16 mobile atlases). The tiles within 2 of the current one are kept, and the least recently used of the rest are closed.
+- Playback: the drawn position eases toward the scroll position with a 110 ms time constant, and native scrolling is untouched. Fractional positions blend the next frame over the current one. Jumps of more than 90 frames, such as anchor links, cut straight to the new position. Up to three atlases ahead in the scroll direction are decoded ahead of time. Measured with steady 100 px wheel notches in headless Chromium, playback advanced at most 2 frames per screen refresh on desktop and 3 on a phone, with 2–3 decode misses per full pass.
 - Fonts: 330 KB total, two of them preloaded.
 
 ## Checks performed (headless Chromium via Playwright)

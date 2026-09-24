@@ -547,6 +547,12 @@ html.fx .hold .closing { opacity: calc(.16 + .84 * var(--lit, 1)); transition: o
   .lang-grid { grid-template-columns: 1fr; }
   .codes { order: -1; display: flex; flex-wrap: wrap; gap: .1em .28em; justify-content: flex-start; font-size: clamp(44px, 14vw, 100px); }
 }
+/* Wide screens: the language codes stay centred beside the text, and beside
+   the closing line while it holds on screen. */
+@media (min-width: 900px) {
+  html.fx .lang-grid { align-items: start; }
+  html.fx .codes { position: sticky; top: calc(50% + (var(--header-h) + var(--safe-top)) / 2); transform: translateY(-50%); }
+}
 
 /* 04 Work: one frame (the camera from the film) until real project photos are added */
 .film {
@@ -677,6 +683,8 @@ html.motion .rv-flip { transform: perspective(700px) rotateX(-80deg); transform-
 html.motion .rv.is-in { opacity: 1; transform: none; }
 /* Scroll-linked (values set by setupScrollFx in app.js) */
 html.fx .focus-list > li { opacity: calc(.16 + .84 * var(--lit, 1)); }
+/* Reading spotlight: the block being read at full strength, the rest a little dimmer (--spot) */
+html.fx .spot { filter: opacity(var(--spot, 1)); }
 html.fx .pillars.is-stacked .pillar-card { transform: perspective(1400px) rotateX(calc(var(--cover, 0) * 5deg)) scale(calc(1 - var(--cover, 0) * .05)); }
 html.fx .pillars.is-stacked .pillar-card > * { opacity: max(.12, 1 - var(--cover, 0) * 1.6); }
 html.fx .result { transform: perspective(1600px) rotateX(calc(var(--rise, 0) * 12deg)) scale(calc(1 - var(--rise, 0) * .06)); transform-origin: 50% 100%; }

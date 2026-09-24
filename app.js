@@ -147,6 +147,10 @@
   function focusList(list, cls) {
     return list && list.length ? '<ul class="' + cls + ' focus-list" role="list">' + listItems(list) + "</ul>" : "";
   }
+  // A block that holds on screen for a moment ("pin" screen heights) before the page moves on.
+  function hold(html, pin) {
+    return '<div class="hold" data-pin="' + pin + '"><div class="hold-in">' + html + "</div></div>";
+  }
   // Two columns on wide screens: the aside holds still while the main column scrolls past it.
   function split(aside, main, extra) {
     return '<div class="wrap split' + (extra ? " " + extra : "") + '"><div class="split-aside">' + aside + '</div><div class="split-main">' + main + "</div></div>";
@@ -177,10 +181,10 @@
     fill("approach", split(head(a, "approach"),
       focusList(a.statements, "statements") + prose(a.text) +
       // The questions and their answer hold on screen for a moment before the page moves on.
-      '<div class="hold"><div class="hold-in">' + focusList(a.questions, "questions") + closing(a.closing) + "</div></div>"));
+      hold(focusList(a.questions, "questions") + closing(a.closing), 0.85)));
 
     var l = C.languages;
-    fill("languages", '<div class="wrap lang-grid"><div>' + head(l, "languages") + prose(l.text) + closing(l.closing) + "</div>" +
+    fill("languages", '<div class="wrap lang-grid"><div>' + head(l, "languages") + prose(l.text) + hold(closing(l.closing), 0.5) + "</div>" +
       '<p class="codes" aria-hidden="true">' + (l.codes || []).map(function (c) { return "<span>" + esc(c) + "</span>"; }).join("") + "</p></div>");
 
     var w = C.work;
@@ -203,7 +207,7 @@
           return '<li class="benefit"><span class="num" aria-hidden="true">' + pad(i + 1) + "</span><h3>" + inline(it.title) + "</h3><div>" + paras(it.text) + "</div></li>";
         }).join("") + "</ol>", "split--time") +
       '<div class="wrap">' +
-        (t.result ? '<div class="result"><p class="result-kicker">' + inline(t.result.kicker) + "</p>" + focusList(t.result.lines, "result-lines") + "</div>" : "") +
+        (t.result ? hold('<div class="result"><p class="result-kicker">' + inline(t.result.kicker) + "</p>" + focusList(t.result.lines, "result-lines") + "</div>", 0.7) : "") +
         closing(t.closing, "closing--center") + "</div>");
 
     var v = C.value;
@@ -883,8 +887,14 @@
     var list = storyStops().concat($$("main > section:not(#story)").map(function (el) {
       return Math.round(el.getBoundingClientRect().top + window.scrollY - pad);
     }));
+    // A held block: stop once it is pinned and fully lit (see setupScrollFx).
+    $$(".hold.is-held").forEach(function (h) {
+      var top = parseFloat(h.style.getPropertyValue("--hold-top")) || 0;
+      list.push(Math.round(h.getBoundingClientRect().top + window.scrollY - top + 0.68 * holdPin(h) * window.innerHeight));
+    });
     return list.filter(function (y) { return y > 0; }).sort(function (a, b) { return a - b; });
   }
+  function holdPin(h) { return parseFloat(h.getAttribute("data-pin")) || 0.85; }
   // The first stop in "list" passed going from "from" to "to" (a stop at "from" doesn't count), or null.
   function stopBetween(list, from, to) {
     var k;
@@ -1143,7 +1153,14 @@
     var motion = root.classList.contains("motion");
     var pillars = $(".pillars"), cards = pillars ? $$(".pillar", pillars) : [];
     var asides = $$(".split-aside"), lists = $$(".focus-list").filter(function (l) { return !l.closest(".hold"); });
-    var holds = $$(".hold"), PIN = 0.85; // how long a hold stays, in screen heights
+    var holds = $$(".hold"); // how long each stays is its data-pin, in screen heights
+    // Reading spotlight: the block being read is at full strength and the text
+    // around it waits a little dimmer. Blocks take turns in reading order, title
+    // first: each hands over once its bottom edge rises past the reading line, a
+    // quarter of the way down the screen. Where a title column sticks beside the
+    // text (wide screens), it stays lit with the first block next to it.
+    var SPOT = ".head, .prose > p, .intro-aside .highlight, .focus-list, .closing, .tasks-after, .time-highlight, .step, .benefit, .values > li, .hold-in";
+    var UPCOMING = 0.3, READ = 0.5, spots = [];
     var result = $(".result"), zoom = $(".work-zoom");
     var queued = false;
 
@@ -1161,13 +1178,28 @@
         if (!fits) cards.forEach(function (c) { c.firstElementChild.style.removeProperty("--cover"); });
       }
       asides.forEach(function (a) { a.classList.toggle("no-stick", a.offsetHeight > r - 24); });
+      spots = [];
+      if (motion) {
+        var all = [];
+        $$("main > section:not(#story):not(#contact)").forEach(function (sec) { all = all.concat($$(SPOT, sec)); });
+        all = all.filter(function (el) { return !all.some(function (o) { return o !== el && o.contains(el); }); });
+        all.forEach(function (el) {
+          var aside = el.closest(".split-aside"), s = { el: el, v: -1, lead: -1 };
+          el.classList.add("spot");
+          if (aside && getComputedStyle(aside).position === "sticky") {
+            var main = aside.nextElementSibling;
+            for (var j = 0; j < all.length; j++) if (main.contains(all[j])) { s.lead = j; break; }
+          }
+          spots.push(s);
+        });
+      }
       holds.forEach(function (h) {
         var inner = h.firstElementChild, fits = motion && inner.offsetHeight < r - 24;
         h.classList.toggle("is-held", fits);
         if (fits) {
           var hd = $(".site-header"), top = hd ? hd.getBoundingClientRect().height : 0;
           h.style.setProperty("--hold-top", Math.max(top + 24, (window.innerHeight + top - inner.offsetHeight) / 2) + "px");
-          h.style.setProperty("--hold-h", Math.round(inner.offsetHeight + window.innerHeight * PIN) + "px");
+          h.style.setProperty("--hold-h", Math.round(inner.offsetHeight + window.innerHeight * holdPin(h)) + "px");
         } else {
           h.style.removeProperty("--hold-top"); h.style.removeProperty("--hold-h");
         }
@@ -1201,16 +1233,31 @@
         if (h.classList.contains("is-held")) {
           // from just before the block settles in place (0) to when it lets go (1)
           var top = parseFloat(h.style.getPropertyValue("--hold-top")) || 0;
-          p = clamp((top - h.getBoundingClientRect().top) / (vh * PIN) + 0.12, 0, 1);
+          p = clamp((top - h.getBoundingClientRect().top) / (vh * holdPin(h)) + 0.12, 0, 1);
         } else {
           var hr = inner.getBoundingClientRect();
           p = clamp((vh * 0.85 - hr.top) / (hr.height + vh * 0.35), 0, 1);
         }
         // the questions light up one by one, then the answer
-        var steps = (q ? q.children.length : 0) + (c ? 1 : 0), k = 0;
-        if (q) for (var i = 0; i < q.children.length; i++, k++) q.children[i].style.setProperty("--lit", clamp(p * 1.25 * steps - k, 0, 1).toFixed(3));
-        if (c) c.style.setProperty("--lit", clamp(p * 1.25 * steps - k, 0, 1).toFixed(3));
+        // (a single line lights sooner, then holds lit)
+        var steps = (q ? q.children.length : 0) + (c ? 1 : 0), k = 0, speed = steps > 1 ? 1.25 : 2.2;
+        if (q) for (var i = 0; i < q.children.length; i++, k++) q.children[i].style.setProperty("--lit", clamp(p * speed * steps - k, 0, 1).toFixed(3));
+        if (c) c.style.setProperty("--lit", clamp(p * speed * steps - k, 0, 1).toFixed(3));
       });
+      if (spots.length) {
+        var line = vh * 0.26, band = vh * 0.06, pass = [], prev = 1;
+        for (var n = 0; n < spots.length; n++) {
+          var t = clamp((line + band - spots[n].el.getBoundingClientRect().bottom) / (2 * band), 0, 1);
+          pass.push(t * t * (3 - 2 * t));
+        }
+        for (n = 0; n < spots.length; n++) {
+          var s = spots[n], done, f;
+          if (s.lead >= 0) { done = pass[s.lead]; f = prev * (1 - done); } // sticky title column
+          else { done = pass[n]; f = prev * (1 - done); prev = done; }
+          var v = Math.round((f + (1 - f) * (UPCOMING + (READ - UPCOMING) * done)) * 100) / 100;
+          if (v !== s.v) { s.v = v; s.el.style.setProperty("--spot", v); }
+        }
+      }
       if (result) {
         var rr = result.getBoundingClientRect();
         result.style.setProperty("--rise", clamp((rr.top - vh * 0.55) / (vh * 0.45), 0, 1).toFixed(3));

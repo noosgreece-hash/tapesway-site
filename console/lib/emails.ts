@@ -52,6 +52,8 @@ export function leadAlertEmail(lead: Lead, to: string, consoleUrl: string): Emai
     text,
     html,
     kind: "lead_alert",
+    // Pressing Reply in the alert answers the person who wrote.
+    ...(lead.email ? { replyTo: lead.email } : {}),
   };
 }
 

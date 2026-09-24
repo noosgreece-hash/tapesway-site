@@ -8,6 +8,8 @@ export interface Email {
   text: string;
   html: string;
   kind: "lead_alert" | "weekly_pack" | string;
+  /** Where "Reply" goes; falls back to EMAIL_REPLY_TO. The lead alert uses the visitor's address. */
+  replyTo?: string;
 }
 
 export interface Mailer {
@@ -37,7 +39,7 @@ const resendMailer: Mailer = {
         subject: email.subject,
         text: email.text,
         html: email.html,
-        ...(env.emailReplyTo ? { reply_to: env.emailReplyTo } : {}),
+        ...(email.replyTo || env.emailReplyTo ? { reply_to: email.replyTo || env.emailReplyTo } : {}),
         tags: [{ name: "kind", value: email.kind.replace(/[^a-zA-Z0-9_-]/g, "_") }],
       }),
     });

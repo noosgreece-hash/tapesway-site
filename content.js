@@ -342,20 +342,21 @@ window.TAPESWAY_CONTENT = {
     ],
     email: "hello@tapesway.com",
     location: "Mykonos, Greece",
+    // Shown in the contact details and the footer, and listed for search engines in index.html.
+    instagram: { handle: "@tapesway", url: "https://www.instagram.com/tapesway/" },
     /*
       Leave formEndpoint empty to have the form open the visitor's email app
       with the message filled in and addressed to "email" above (nothing is
       sent by the website itself). Set it to a URL that accepts POST to send
       messages directly; success is only shown when it answers OK.
 
-      Once the tapesway console is live, set it to the console's lead endpoint:
-        formEndpoint: "https://console.tapesway.com/api/leads",
-      (use whatever address the console is deployed at, followed by /api/leads).
-      Each message then lands in the console's Leads inbox and the owner gets
-      an email. The console must list this website's address in its
-      ALLOWED_ORIGINS setting (see console/README.md).
+      It points at the tapesway console's lead endpoint: each message lands
+      in the console's Leads inbox and the owner gets an email. The console
+      must list this website's address in its ALLOWED_ORIGINS setting (see
+      console/README.md). If the console can't be reached, visitors are told
+      the message was not sent and are shown the email address instead.
     */
-    formEndpoint: "",
+    formEndpoint: "https://console.tapesway.com/api/leads",
     fields: {
       name: "Όνομα",
       business: "Επιχείρηση",

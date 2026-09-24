@@ -86,7 +86,7 @@
           "</picture>" +
           '<canvas class="story-canvas" aria-hidden="true"></canvas>' +
           tableTitle(S.tableTitle) +
-          '<div class="scroll-cue" data-copy="cue" aria-hidden="true"><i></i></div>' +
+          '<div class="scroll-cue" data-copy="cue" aria-hidden="true"><svg viewBox="0 0 22 52" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M11 1v48M3 41l8 8 8-8"/></svg></div>' +
           '<div class="story-hud" aria-hidden="true"><div class="story-progress"><b></b></div></div>' +
           '<a class="story-skip" href="' + esc(S.skipHref) + '">' + esc(S.skipLabel) + ' <span aria-hidden="true">↓</span></a>' +
         "</div>" +
@@ -156,6 +156,7 @@
       '<div class="intro-body">' + prose(h.text) +
         '<div class="intro-aside">' + (h.highlight ? '<p class="highlight">' + inline(h.highlight) + "</p>" : "") +
           '<div class="actions">' + h.actions.map(function (a) { return btn(a, "btn--" + (a.style || "primary")); }).join("") + "</div>" +
+          (C.cta && C.cta.note ? '<p class="cta-note">' + inline(C.cta.note) + "</p>" : "") +
         "</div>" +
       "</div></div>");
 
@@ -168,7 +169,9 @@
 
     var a = C.approach;
     fill("approach", split(head(a, "approach"),
-      focusList(a.statements, "statements") + prose(a.text) + focusList(a.questions, "questions") + closing(a.closing)));
+      focusList(a.statements, "statements") + prose(a.text) +
+      // The questions and their answer hold on screen for a moment before the page moves on.
+      '<div class="hold"><div class="hold-in">' + focusList(a.questions, "questions") + closing(a.closing) + "</div></div>"));
 
     var l = C.languages;
     fill("languages", '<div class="wrap lang-grid"><div>' + head(l, "languages") + prose(l.text) + closing(l.closing) + "</div>" +
@@ -189,7 +192,7 @@
     fill("time", '<div class="wrap">' + head(t, "time") + prose(t.text, "prose--offset") +
         focusList(t.tasks, "tasks") +
         (t.tasksAfter ? '<p class="tasks-after">' + inline(t.tasksAfter) + "</p>" : "") + "</div>" +
-      split('<div class="time-highlight"><p class="highlight">' + inline(t.highlight) + "</p><p>" + inline(t.highlightText) + "</p></div>",
+      split('<div class="time-highlight"><p class="highlight">' + inline(t.highlight) + "</p>" + (t.highlightText ? "<p>" + inline(t.highlightText) + "</p>" : "") + "</div>",
         '<ol class="benefits" role="list">' + t.items.map(function (it, i) {
           return '<li class="benefit"><span class="num" aria-hidden="true">' + pad(i + 1) + "</span><h3>" + inline(it.title) + "</h3><div>" + paras(it.text) + "</div></li>";
         }).join("") + "</ol>", "split--time") +
@@ -202,6 +205,17 @@
       '<ul class="values" role="list">' + v.items.map(function (it) {
         return "<li><h3>" + inline(it.title) + "</h3><p>" + inline(it.text) + "</p></li>";
       }).join("") + "</ul>"));
+
+    // The next step, repeated after the sections that make the case.
+    var cta = C.cta;
+    if (cta) (cta.after || []).forEach(function (name) {
+      var sec = $('[data-render="' + name + '"]');
+      if (!sec) return;
+      var dark = sec.classList.contains("on-dark");
+      sec.insertAdjacentHTML("beforeend", '<div class="wrap cta-row">' + btn(cta, dark ? "btn--light" : "btn--primary") +
+        (cta.note ? '<p class="cta-note">' + inline(cta.note) + "</p>" : "") + "</div>");
+    });
+    fill("mobilecta", cta ? btn(cta, "btn--primary") : "");
 
     var c = C.contact, f = c.fields;
     var mailto = !c.formEndpoint;
@@ -311,6 +325,8 @@
     this.onframe = null;                        // called when a wanted tile arrives
     this.onfatal = null;
     this.onprogress = null;                     // called with (loaded, total) as tiles arrive
+    this.bytes = 0;                             // downloaded so far, to estimate the connection speed
+    this.started = Date.now();
   }
   Sequence.prototype.tileOf = function (f) { return Math.floor(f / this.per); };
   Sequence.prototype.url = function (t) {
@@ -326,13 +342,23 @@
   };
   Sequence.prototype.want = function (f) { this.frame = f; this.target = this.tileOf(f); this.pump(); };
   Sequence.prototype.nextTile = function () {
-    // The needed tile and its neighbours first, then straight on in playback
-    // order, so the whole clip streams in the order it will be watched.
-    var t = this.target, n = this.tiles, i;
-    for (i = Math.max(t - 1, 0); i <= Math.min(t + 2, n - 1); i++) if (this.ok(i)) return i;
-    for (i = t + 3; i < n; i++) if (this.ok(i)) return i;
+    // The needed tile and the next few first. Then the rest of the clip in
+    // playback order, unless the connection is slow (the rest would take more
+    // than a few seconds): then coarse to fine, every 4th tile ahead, then
+    // every 2nd, then all of them, so fast scrolling still finds a nearby
+    // frame while the gaps fill in.
+    var t = this.target, n = this.tiles, i, step;
+    for (i = Math.max(t - 1, 0); i <= Math.min(t + 5, n - 1); i++) if (this.ok(i)) return i;
+    for (step = this.slow() ? 4 : 1; step >= 1; step >>= 1)
+      for (i = t + 6; i < n; i++) if (i % step === 0 && this.ok(i)) return i;
     for (i = t - 2; i >= 0; i--) if (this.ok(i)) return i;
     return -1;
+  };
+  Sequence.prototype.slow = function () {
+    var ms = Date.now() - this.started;
+    if (this.bytes < 262144 || ms < 300) return false;   // too early to tell
+    var left = Math.max(0, (this.m.totalBytes || 0) - this.bytes);
+    return left / (this.bytes / ms) > 6000;
   };
   Sequence.prototype.ok = function (t) { return !this.blobs[t] && this.state[t] === 0; };
   Sequence.prototype.pump = function () {
@@ -355,6 +381,7 @@
         self.blobs[t] = b;
         self.state[t] = 0;
         self.loaded++;
+        self.bytes += b.size;
         if (self.onprogress) self.onprogress(self.loaded, self.tiles);
         if (Math.abs(t - self.target) <= 1 && self.onframe) self.onframe(t);
       })
@@ -411,8 +438,10 @@
   Sequence.prototype.nearestReady = function (f) {
     var t = this.tileOf(f);
     for (var d = 1; d < 16; d++) {
-      if (this.bitmaps.has(t - d)) return this.cell(this.bitmaps.get(t - d), (t - d + 1) * this.per - 1);
-      if (this.bitmaps.has(t + d)) return this.cell(this.bitmaps.get(t + d), (t + d) * this.per);
+      var c = null;
+      if (this.bitmaps.has(t - d)) c = this.cell(this.bitmaps.get(t - d), (t - d + 1) * this.per - 1);
+      else if (this.bitmaps.has(t + d)) c = this.cell(this.bitmaps.get(t + d), (t + d) * this.per);
+      if (c) { c.gap = d; return c; }
     }
     return null;
   };
@@ -437,16 +466,18 @@
     // visitor stops scrolling the film glides to rest instead of halting.
     // Lower OMEGA = longer, softer glide (settles in about 6.6 / OMEGA seconds).
     var OMEGA = 6.5, JUMP = 1.0; // JUMP: target moves further than this (viewport heights) in one frame = cut, not glide
-    var misses = 0, targetT = 0, shownT = -1, velT = 0, prevTarget = -1, lastNow = 0, running = false, drawnKey = "";
+    var misses = 0, gapSum = 0, targetT = 0, shownT = -1, velT = 0, prevTarget = -1, lastNow = 0, running = false, drawnKey = "";
 
     function motionOn() { return root.classList.contains("motion"); }
 
-    // Preloader: the logo and a progress line cover the page while the film
-    // downloads, so playback is smooth from the first scroll. It lifts when every
-    // frame is in and the opening frames are decoded, or after PRELOAD_MAX ms.
-    var PRELOAD_MAX = 12000;
+    // Preloader: the logo and a progress line cover the page only until the
+    // film has a head start. It lifts once the opening frames are decoded and
+    // the rest is on course to arrive within a few seconds (frames stream on in
+    // playback order while the visitor scrolls), and never waits longer than
+    // PRELOAD_MAX ms. On a fast connection that is well under a second.
+    var PRELOAD_MAX = 3500, HEAD_START = 6, REST_WITHIN = 4000;
     var pre = $(".preloader"), preBar = pre ? $("b", pre) : null;
-    var preDone = !pre || !motionOn();
+    var preDone = !pre || !motionOn(), openingReady = false;
     function preloadDone() {
       if (pre) pre.classList.add("is-done");
       root.classList.remove("is-preloading");
@@ -458,10 +489,17 @@
     else { root.classList.add("is-preloading"); setTimeout(preloadDone, PRELOAD_MAX); }
     function preloadProgress(loaded, total) {
       if (preDone) return;
-      if (preBar) preBar.style.transform = "scaleX(" + (loaded / total).toFixed(3) + ")";
-      if (loaded < total) return;
-      var s = seq, first = [];
-      for (var t = 0; t < Math.min(4, s.tiles); t++) first.push(s.decodeTile(t));
+      var s = seq, need = Math.min(HEAD_START, s.tiles);
+      if (preBar) preBar.style.transform = "scaleX(" + Math.min(1, loaded / need).toFixed(3) + ")";
+      for (var t = 0; t < need; t++) if (!s.hasTile(t)) return;
+      // Bytes still to come, and how long they should take at the speed seen so far.
+      var left = Math.max(0, (s.m.totalBytes || s.bytes / loaded * total) - s.bytes);
+      var rate = s.bytes / Math.max(1, Date.now() - s.started);
+      if (loaded < total && left / rate > REST_WITHIN) return;
+      if (openingReady) return;
+      openingReady = true;
+      var first = [];
+      for (t = 0; t < Math.min(4, s.tiles); t++) first.push(s.decodeTile(t));
       Promise.all(first).then(function () { if (s === seq) preloadDone(); });
     }
 
@@ -469,7 +507,7 @@
       // Loading failed or motion is not wanted: show the composed static story.
       preloadDone();
       if (seq) { seq.destroy(); seq = null; }
-      root.classList.remove("motion");
+      root.classList.remove("motion", "in-story");
       root.classList.add("no-motion");
     }
 
@@ -549,7 +587,9 @@
       var c = seq.touch(i);
       if (!c) {
         misses++;
-        if (!drawnKey) { var near = seq.nearestReady(i); if (near) { paint(near); setTitleFrame(-1); } }
+        var near = seq.nearestReady(i);
+        gapSum += near ? Math.min(near.gap, 16) : 16;
+        if (!drawnKey && near) { paint(near); setTitleFrame(-1); }
         seq.decode(i).then(function (c) { if (c) { drawnKey = ""; request(); } });
       } else {
         paint(c);
@@ -670,6 +710,7 @@
       get frame() { return seq ? seq.frame : -1; },
       get settled() { return !running; },
       get misses() { return misses; },
+      get gapSum() { return gapSum; },
       get total() { return timeline ? timeline.total : 0; },
       get loaded() { return seq ? seq.blobs.filter(Boolean).length : 0; },
       get tiles() { return seq ? seq.tiles : 0; },
@@ -756,6 +797,101 @@
     });
   }
 
+  /* ---------- the film's end: top bar and wheel smoothing ---------- */
+  // Where the story stops holding the screen and the page starts.
+  function storyEnd() {
+    var story = $("#story");
+    return story ? story.offsetTop + story.offsetHeight - window.innerHeight : 0;
+  }
+
+  // The top bar stays out of the way while the film plays and slides in as it ends.
+  function setupHeaderReveal() {
+    if (!root.classList.contains("motion")) return;
+    var queued = false;
+    function update() {
+      queued = false;
+      root.classList.toggle("in-story", root.classList.contains("motion") && window.scrollY < storyEnd() - 8);
+    }
+    function queue() { if (!queued) { queued = true; requestAnimationFrame(update); } }
+    window.addEventListener("scroll", queue, { passive: true });
+    window.addEventListener("resize", queue);
+    update();
+  }
+
+  // Below the story, wheel and trackpad scrolling ease into place instead of
+  // jumping; the story itself already glides on its own spring, so it is left
+  // alone. Touch, keyboard, the scrollbar and links keep the browser's own
+  // scrolling, and any of them stops an easing in progress.
+  function setupSmoothWheel() {
+    if (!root.classList.contains("motion")) return;
+    var TIME = 150;               // ms for the remaining distance to shrink by ~63%
+    var target = null, cur = 0, last = 0, raf = 0;
+    function maxY() { return document.documentElement.scrollHeight - window.innerHeight; }
+    function stop() { if (raf) cancelAnimationFrame(raf); raf = 0; target = null; last = 0; }
+    function frame(now) {
+      // Something else moved the page (a link, a script, the scrollbar): let it win.
+      if (Math.abs(window.scrollY - cur) > 3) { stop(); return; }
+      var dt = Math.min(50, last ? now - last : 16.7); last = now;
+      var d = target - cur;
+      if (Math.abs(d) < 0.5) { window.scrollTo(0, target); stop(); return; }
+      var move = d * (1 - Math.exp(-dt / TIME));
+      if (Math.abs(move) < 0.5) move = d > 0 ? Math.min(d, 0.5) : Math.max(d, -0.5);
+      cur += move;
+      window.scrollTo(0, cur);
+      raf = requestAnimationFrame(frame);
+    }
+    function scrollsItself(el, dy) {
+      for (; el && el !== document.body && el !== document.documentElement; el = el.parentElement) {
+        if (el.scrollHeight <= el.clientHeight + 1) continue;
+        var oy = getComputedStyle(el).overflowY;
+        if (oy !== "auto" && oy !== "scroll") continue;
+        if (dy > 0 ? el.scrollTop + el.clientHeight < el.scrollHeight - 1 : el.scrollTop > 0) return true;
+      }
+      return false;
+    }
+    window.addEventListener("wheel", function (e) {
+      if (e.defaultPrevented || e.ctrlKey || e.metaKey || !root.classList.contains("motion")) return;
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      var menu = $("#site-menu");
+      if (menu && !menu.hidden) return;
+      var dy = e.deltaY * (e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? window.innerHeight : 1);
+      if (!dy || scrollsItself(e.target, dy)) return;
+      var end = storyEnd(), y = window.scrollY;
+      var base = target === null ? y : target;
+      if (y < end - 1 || (dy < 0 && base <= end + 1)) { stop(); return; }   // in the story: its own glide
+      e.preventDefault();
+      if (target === null) cur = y;
+      target = Math.max(end, Math.min(maxY(), base + dy));
+      if (!raf) raf = requestAnimationFrame(frame);
+    }, { passive: false });
+    ["pointerdown", "touchstart", "keydown"].forEach(function (t) {
+      window.addEventListener(t, function () { if (raf) stop(); }, { passive: true });
+    });
+    window.addEventListener("resize", function () { if (target !== null) target = Math.min(target, maxY()); });
+  }
+
+  /* ---------- phone call-to-action bar ---------- */
+  // On phones a slim bar with the main button sits at the bottom from the
+  // first section after the hero, and steps away while the contact form is on screen.
+  function setupMobileCta() {
+    var bar = $(".mobile-cta"), contact = $("#contact"), menu = $("#site-menu"), first = $("#offer");
+    if (!bar || !contact) return;
+    var queued = false;
+    function update() {
+      queued = false;
+      var vh = window.innerHeight, c = contact.getBoundingClientRect();
+      // from the section after the hero (which has its own buttons) until the form comes into view
+      var start = (first || contact).getBoundingClientRect().top;
+      var show = start < vh * 0.6 && c.top > vh * 0.9 && !(menu && !menu.hidden);
+      bar.classList.toggle("is-shown", show);
+    }
+    function queue() { if (!queued) { queued = true; requestAnimationFrame(update); } }
+    window.addEventListener("scroll", queue, { passive: true });
+    window.addEventListener("resize", queue);
+    document.addEventListener("click", queue);
+    update();
+  }
+
   /* ---------- current section in the menu ---------- */
   function setupActiveNav() {
     if (!("IntersectionObserver" in window)) return;
@@ -777,7 +913,7 @@
   // Nothing moves again once it has arrived.
   var REVEAL = [
     [".section .head .eyebrow, .section .head .line, .section .prose > p, .intro-aside .highlight, .intro-aside .actions," +
-     " .closing .line, .tasks-after, .time-highlight > p, .focus-list, .work-frame, .contact-details, .form .field, .form-foot", "rv"],
+     " .closing .line, .tasks-after, .time-highlight > p, .focus-list, .work-frame, .contact-details, .form .field, .form-foot, .cta-row", "rv"],
     [".pillar, .step, .benefit, .values > li", "rv rv-3d"],
     [".codes span", "rv rv-flip"]
   ];
@@ -811,7 +947,8 @@
   function setupScrollFx() {
     var motion = root.classList.contains("motion");
     var pillars = $(".pillars"), cards = pillars ? $$(".pillar", pillars) : [];
-    var asides = $$(".split-aside"), lists = $$(".focus-list");
+    var asides = $$(".split-aside"), lists = $$(".focus-list").filter(function (l) { return !l.closest(".hold"); });
+    var holds = $$(".hold"), PIN = 0.85; // how long a hold stays, in screen heights
     var result = $(".result"), zoom = $(".work-zoom");
     var queued = false;
 
@@ -829,6 +966,17 @@
         if (!fits) cards.forEach(function (c) { c.firstElementChild.style.removeProperty("--cover"); });
       }
       asides.forEach(function (a) { a.classList.toggle("no-stick", a.offsetHeight > r - 24); });
+      holds.forEach(function (h) {
+        var inner = h.firstElementChild, fits = motion && inner.offsetHeight < r - 24;
+        h.classList.toggle("is-held", fits);
+        if (fits) {
+          var hd = $(".site-header"), top = hd ? hd.getBoundingClientRect().height : 0;
+          h.style.setProperty("--hold-top", Math.max(top + 24, (window.innerHeight + top - inner.offsetHeight) / 2) + "px");
+          h.style.setProperty("--hold-h", Math.round(inner.offsetHeight + window.innerHeight * PIN) + "px");
+        } else {
+          h.style.removeProperty("--hold-top"); h.style.removeProperty("--hold-h");
+        }
+      });
       update();
     }
     function update() {
@@ -852,6 +1000,22 @@
         var p = clamp((vh * 0.85 - r.top) / (r.height + vh * 0.35), 0, 1);
         for (var i = 0; i < n; i++) items[i].style.setProperty("--lit", clamp(p * n - i, 0, 1).toFixed(3));
       });
+      holds.forEach(function (h) {
+        var inner = h.firstElementChild, q = $(".focus-list", inner), c = $(".closing", inner);
+        var p;
+        if (h.classList.contains("is-held")) {
+          // from just before the block settles in place (0) to when it lets go (1)
+          var top = parseFloat(h.style.getPropertyValue("--hold-top")) || 0;
+          p = clamp((top - h.getBoundingClientRect().top) / (vh * PIN) + 0.12, 0, 1);
+        } else {
+          var hr = inner.getBoundingClientRect();
+          p = clamp((vh * 0.85 - hr.top) / (hr.height + vh * 0.35), 0, 1);
+        }
+        // the questions light up one by one, then the answer
+        var steps = (q ? q.children.length : 0) + (c ? 1 : 0), k = 0;
+        if (q) for (var i = 0; i < q.children.length; i++, k++) q.children[i].style.setProperty("--lit", clamp(p * 1.25 * steps - k, 0, 1).toFixed(3));
+        if (c) c.style.setProperty("--lit", clamp(p * 1.25 * steps - k, 0, 1).toFixed(3));
+      });
       if (result) {
         var rr = result.getBoundingClientRect();
         result.style.setProperty("--rise", clamp((rr.top - vh * 0.55) / (vh * 0.45), 0, 1).toFixed(3));
@@ -873,6 +1037,9 @@
   renderHeader();
   renderStory();
   renderSections();
+  // tools/prerender.js loads the page with ?prerender to copy the rendered text
+  // into index.html, so search engines and link previews read it without scripts.
+  if (/[?&]prerender(&|$)/.test(location.search)) return;
   setupMenu();
   setupStory();
   setupForm();
@@ -880,4 +1047,7 @@
   setupActiveNav();
   setupReveals();
   setupScrollFx();
+  setupHeaderReveal();
+  setupSmoothWheel();
+  setupMobileCta();
 })();

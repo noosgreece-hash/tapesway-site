@@ -36,7 +36,7 @@ clients, and emails shown on the Outbox page instead of being sent.
    `formEndpoint: "https://console.tapesway.com/api/leads"`. The console accepts posts from
    the addresses in `ALLOWED_ORIGINS` (tapesway.com and www.tapesway.com by default).
 
-`/api/health` answers `{ ok: true }` with the mode (demo or Supabase) once the console is up.
+`/api/health` answers `{ "ok": true }` once the console is up.
 
 ## Not built yet
 

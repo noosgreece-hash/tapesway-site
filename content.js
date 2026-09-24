@@ -342,6 +342,8 @@ window.TAPESWAY_CONTENT = {
     ],
     email: "hello@tapesway.com",
     location: "Mykonos, Greece",
+    // Shown in the contact details and the footer, and listed for search engines in index.html.
+    instagram: { handle: "@tapesway", url: "https://www.instagram.com/tapesway/" },
     /*
       Leave formEndpoint empty to have the form open the visitor's email app
       with the message filled in and addressed to "email" above (nothing is

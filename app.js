@@ -231,6 +231,7 @@
         '<dl class="contact-details">' +
           "<div><dt>" + esc(UI.emailLabel) + '</dt><dd><a class="text-link" href="mailto:' + esc(c.email) + '">' + esc(c.email) + "</a></dd></div>" +
           "<div><dt>" + esc(UI.basedInLabel) + "</dt><dd>" + esc(c.location) + "</dd></div>" +
+          (c.instagram ? '<div><dt>Instagram</dt><dd><a class="text-link" href="' + esc(c.instagram.url) + '" target="_blank" rel="noopener">' + esc(c.instagram.handle) + "</a></dd></div>" : "") +
         "</dl></div>" +
       '<form class="form" novalidate aria-labelledby="contact-title">' +
         field("name", "text", false, true, ' autocomplete="name"') +
@@ -253,6 +254,7 @@
         (ft.tagline ? '<p class="footer-tagline">' + esc(ft.tagline) + "</p>" : "") + "</div>" +
         '<nav aria-label="' + esc(UI.footerNav) + '">' + navLinks() + "</nav></div>" +
       '<div class="footer-row"><span>' + esc(ft.copyright) + "</span>" +
+        (C.contact.instagram ? '<a href="' + esc(C.contact.instagram.url) + '" target="_blank" rel="noopener">Instagram ' + esc(C.contact.instagram.handle) + "</a>" : "") +
         '<a class="to-top" href="#">' + esc(UI.backToTop) + ' <span aria-hidden="true">↑</span></a></div>');
   }
 

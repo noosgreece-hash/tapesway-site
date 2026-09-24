@@ -1,8 +1,8 @@
 # Working files that should never be served on tapesway.com.
-# console/ is the private console, deployed as its own Vercel project.
+# console/ is NOT listed: the console's own Vercel project reads this file too, so
+# ignoring it here empties that build. vercel.json redirects /console/ away instead.
 source/
 tools/
 docs/
 style-tile.html
 README.md
-console/

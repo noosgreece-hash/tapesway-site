@@ -14,13 +14,27 @@ function int(value: string | undefined, fallback: number): number {
   return Number.isFinite(n) && n >= 0 ? n : fallback;
 }
 
+/**
+ * The Supabase project address, reduced to "https://<ref>.supabase.co". Supabase's pages
+ * also show addresses like ".../rest/v1/", and pasting one of those breaks every call.
+ */
+export function supabaseOrigin(value: string | undefined): string {
+  const raw = (value || "").trim().replace(/^["']|["']$/g, "");
+  if (!raw) return "";
+  try {
+    return new URL(raw).origin;
+  } catch {
+    return raw.replace(/\/+$/, "");
+  }
+}
+
 export const DEV_PASSWORD = "demo";
 const DEV_SECRET = "dev-only-session-secret-change-me-0123456789abcdef";
 
 export const env = {
   isProd,
   supabase: {
-    url: process.env.SUPABASE_URL || "",
+    url: supabaseOrigin(process.env.SUPABASE_URL),
     anonKey: process.env.SUPABASE_ANON_KEY || "",
     serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || "",
   },

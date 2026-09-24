@@ -31,7 +31,8 @@ export async function setupCheck() {
   } catch {
     host = "not a valid URL";
   }
-  out.SUPABASE_URL = host;
+  const raw = (process.env.SUPABASE_URL || "").trim();
+  out.SUPABASE_URL = raw.replace(/\/+$/, "") === env.supabase.url ? host : `${host} (extra path in the setting ignored)`;
   out.SUPABASE_ANON_KEY = await anonKeyWorks();
 
   const admin = createClient(env.supabase.url, env.supabase.serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });

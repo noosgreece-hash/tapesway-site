@@ -8,6 +8,10 @@
   // Must match the mobile media query in styles.css and the <source> in the poster.
   var MOBILE_MQ = "(max-width: 767px), (max-aspect-ratio: 4/5)";
   var mq = window.matchMedia(MOBILE_MQ);
+  // Beats of the film (content.js pacing ids) whose end is a scroll stop, besides
+  // the opening screen. setupStory fills storyStops in once the film is set up.
+  var STORY_STOPS = ["push-in", "film-strip", "final-hold"];
+  var storyStops = function () { return []; };
 
   /* ---------- helpers ---------- */
   function esc(s) {
@@ -468,7 +472,7 @@
     // scrolling is untouched): it speeds up and slows down gradually, so when the
     // visitor stops scrolling the film glides to rest instead of halting.
     // Lower OMEGA = longer, softer glide (settles in about 6.6 / OMEGA seconds).
-    var OMEGA = 6.5, JUMP = 1.0; // JUMP: target moves further than this (viewport heights) in one frame = cut, not glide
+    var OMEGA = 4.8, JUMP = 1.0; // JUMP: target moves further than this (viewport heights) in one frame = cut, not glide
     var misses = 0, gapSum = 0, targetT = 0, shownT = -1, velT = 0, prevTarget = -1, lastNow = 0, running = false, drawnKey = "";
 
     function motionOn() { return root.classList.contains("motion"); }
@@ -615,45 +619,30 @@
       return travel > 0 ? (scrolled / travel) * timeline.total : 0;
     }
     // First screen catch: however fast the first scroll, the page stops once where
-    // the opening hold ends and rests there a moment, so the first screen is never
-    // skipped by accident. Wheels and trackpads are held here in script; on touch
-    // screens the "catch-armed" class makes the top and the .story-catch marker the
-    // only places a swipe can end (styles.css), until the page rests at the marker.
-    var catchEl = $(".story-catch", track), CATCH_MS = 450, CATCH_MAX = 1100, CATCH_GAP = 140;
-    var catchArmed = false, caughtAt = 0, lastSwallow = 0, restTimer = 0, navUntil = 0;
+    // the opening hold ends, so the first screen is never skipped by accident. For
+    // wheels and trackpads that stop is one of the page's scroll stops (see
+    // setupSmoothWheel). On touch screens the "catch-armed" class makes the top and
+    // the .story-catch marker the only places a swipe can end (styles.css), until
+    // the page rests at the marker; further down, setupTouchStops takes over.
+    var catchEl = $(".story-catch", track);
+    var catchArmed = false, restTimer = 0, navUntil = 0;
     function arm(on) { catchArmed = on; root.classList.toggle("catch-armed", on); }
+    function travelPx() { return track.offsetHeight - stage.offsetHeight; }
     function catchOffset() {
       var first = timeline && timeline.segs[0];
       if (!first || first.f0 !== first.f1) return 0;
-      var travel = track.offsetHeight - stage.offsetHeight;
+      var travel = travelPx();
       return travel > 0 ? Math.round(first.end / timeline.total * travel) : 0;
     }
     function placeCatch() { if (catchEl) catchEl.style.top = catchOffset() + "px"; }
     function catchY() { return track.getBoundingClientRect().top + window.scrollY + catchOffset(); }
-    window.addEventListener("wheel", function (e) {
-      if (e.defaultPrevented || e.ctrlKey || e.metaKey || !motionOn() || !timeline) return;
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-      var now = performance.now();
-      if (caughtAt) {
-        // Resting: swallow the rest of the gesture that was caught (its momentum
-        // included) until a short pause after CATCH_MS, and never past CATCH_MAX.
-        var rest = now - caughtAt;
-        if (e.deltaY > 0 && rest < CATCH_MAX && (rest < CATCH_MS || now - lastSwallow < CATCH_GAP)) {
-          lastSwallow = now; e.preventDefault(); return;
-        }
-        caughtAt = 0;
-      }
-      var dy = e.deltaY * (e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? window.innerHeight : 1);
-      if (!catchArmed || dy <= 0) return;
-      var y = window.scrollY, stop = catchY();
-      if (stop <= 0 || y >= stop - 1) return;
-      // Scroll the hold in script (the picture doesn't change there), so no native
-      // smooth-scroll animation already under way can carry the page past the stop.
-      e.preventDefault();
-      var ny = Math.min(stop, y + dy);
-      window.scrollTo(0, ny);
-      if (ny >= stop) { arm(false); caughtAt = lastSwallow = now; }
-    }, { passive: false });
+    // Scroll stops inside the film: the end of the opening screen and of its main beats.
+    storyStops = function () {
+      if (!motionOn() || !timeline) return [];
+      var top = track.getBoundingClientRect().top + window.scrollY, travel = travelPx();
+      return timeline.segs.filter(function (sg, k) { return k === 0 || STORY_STOPS.indexOf(sg.id) >= 0; })
+        .map(function (sg) { return Math.round(top + sg.end / timeline.total * travel); });
+    };
     window.addEventListener("scroll", function () {
       if (!motionOn()) return;
       var y = window.scrollY, stop = catchY();
@@ -776,7 +765,8 @@
       get loaded() { return seq ? seq.blobs.filter(Boolean).length : 0; },
       get tiles() { return seq ? seq.tiles : 0; },
       get decoded() { return seq ? seq.bitmaps.size : 0; },
-      get preloaded() { return preDone; }
+      get preloaded() { return preDone; },
+      get stops() { return scrollStops(); }
     };
   }
 
@@ -879,14 +869,38 @@
     update();
   }
 
-  // Below the story, wheel and trackpad scrolling ease into place instead of
-  // jumping; the story itself already glides on its own spring, so it is left
-  // alone. Touch, keyboard, the scrollbar and links keep the browser's own
-  // scrolling, and any of them stops an easing in progress.
+  // Scroll stops: the film's opening screen and main beats, the end of the film
+  // and the start of every section (under the top bar). However hard a swipe or
+  // flick, it ends at the next stop, so nothing is skipped by accident; the next
+  // swipe carries on from there. Only stops ahead of where a swipe began count.
+  function scrollStops() {
+    var pad = parseFloat(getComputedStyle(root).scrollPaddingTop) || 0;
+    var list = storyStops().concat($$("main > section:not(#story)").map(function (el) {
+      return Math.round(el.getBoundingClientRect().top + window.scrollY - pad);
+    }));
+    return list.filter(function (y) { return y > 0; }).sort(function (a, b) { return a - b; });
+  }
+  // The first stop in "list" passed going from "from" to "to" (a stop at "from" doesn't count), or null.
+  function stopBetween(list, from, to) {
+    var k;
+    if (to > from) { for (k = 0; k < list.length; k++) if (list[k] > from + 2 && list[k] <= to) return list[k]; }
+    else if (to < from) { for (k = list.length - 1; k >= 0; k--) if (list[k] < from - 2 && list[k] >= to) return list[k]; }
+    return null;
+  }
+
+  // Wheel and trackpad scrolling eases into place on the whole page, a little
+  // slower than the browser's own, and halts at the scroll stops: the rest of the
+  // swipe that reached a stop (its momentum included) is let go. Touch, keyboard,
+  // the scrollbar and links keep the browser's own scrolling, and any of them
+  // stops an easing in progress. The film glides on its own spring on top of this.
   function setupSmoothWheel() {
     if (!root.classList.contains("motion")) return;
-    var TIME = 150;               // ms for the remaining distance to shrink by ~63%
+    var TIME = 190;               // ms for the remaining distance to shrink by ~63%
+    var SPEED = 0.8;              // share of each wheel step that is scrolled
+    var GAP = 220;                // ms without wheel events that ends a swipe
+    var HOLD = 800, HOLD_MAX = 2500, HOLD_GAP = 140; // resting at a stop (from the moment it is reached): see below
     var target = null, cur = 0, last = 0, raf = 0;
+    var lastWheel = 0, from = 0, stops = [], heldAt = 0, lastSwallow = 0, lastDy = 0;
     function maxY() { return document.documentElement.scrollHeight - window.innerHeight; }
     function stop() { if (raf) cancelAnimationFrame(raf); raf = 0; target = null; last = 0; }
     function frame(now) {
@@ -917,18 +931,61 @@
       if (menu && !menu.hidden) return;
       var dy = e.deltaY * (e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? window.innerHeight : 1);
       if (!dy || scrollsItself(e.target, dy)) return;
-      var end = storyEnd(), y = window.scrollY;
-      var base = target === null ? y : target;
-      if (y < end - 1 || (dy < 0 && base <= end + 1)) { stop(); return; }   // in the story: its own glide
       e.preventDefault();
+      var now = performance.now();
+      if (heldAt) {
+        // Resting at a stop: let go of the rest of that swipe, its momentum included.
+        // Once HOLD has passed, it counts as over after a pause of HOLD_GAP or when
+        // the steps stop shrinking (a new swipe, or a mouse wheel still turning);
+        // turning back is always let through, and HOLD_MAX ends it in any case.
+        var rest = now - heldAt, same = dy * lastDy > 0, a = Math.abs(dy), b = Math.abs(lastDy);
+        var fading = same && (a < b || (a === b && a < 40));
+        if (same && rest < HOLD_MAX && (rest < HOLD || (now - lastSwallow < HOLD_GAP && fading))) {
+          lastSwallow = now; lastDy = dy; return;
+        }
+        heldAt = 0; lastWheel = 0;
+      }
+      lastDy = dy;
+      var y = window.scrollY, base = target === null ? y : target;
+      if (now - lastWheel > GAP) { from = base; stops = scrollStops(); }   // a new swipe starts here
+      lastWheel = now;
       if (target === null) cur = y;
-      target = Math.max(end, Math.min(maxY(), base + dy));
+      var next = Math.max(0, Math.min(maxY(), base + dy * SPEED));
+      var at = stopBetween(stops, from, next);
+      if (at !== null) { next = at; heldAt = lastSwallow = now; }
+      target = next;
       if (!raf) raf = requestAnimationFrame(frame);
     }, { passive: false });
     ["pointerdown", "touchstart", "keydown"].forEach(function (t) {
-      window.addEventListener(t, function () { if (raf) stop(); }, { passive: true });
+      window.addEventListener(t, function () { if (raf) stop(); heldAt = 0; }, { passive: true });
     });
     window.addEventListener("resize", function () { if (target !== null) target = Math.min(target, maxY()); });
+  }
+
+  // Touch screens: the finger always moves the page freely, but once it lets go,
+  // the flick's glide ends at the first scroll stop it reaches.
+  function setupTouchStops() {
+    if (!root.classList.contains("motion")) return;
+    var touching = false, moved = false, armed = false, from = 0, stops = [];
+    window.addEventListener("touchstart", function () { touching = true; moved = false; armed = false; }, { passive: true });
+    window.addEventListener("touchmove", function () { moved = true; }, { passive: true });
+    function release() { touching = false; armed = moved; from = window.scrollY; if (armed) stops = scrollStops(); }
+    window.addEventListener("touchend", release, { passive: true });
+    window.addEventListener("touchcancel", release, { passive: true });
+    // A tapped link or a key scrolls where it points, without stopping on the way.
+    document.addEventListener("click", function () { armed = false; }, true);
+    window.addEventListener("keydown", function () { armed = false; });
+    window.addEventListener("scroll", function () {
+      if (touching || !armed || root.classList.contains("catch-armed")) return;
+      var at = stopBetween(stops, from, window.scrollY);
+      if (at === null) return;
+      armed = false;
+      // Ending the glide: a moment of overflow:hidden stops iOS momentum scrolling,
+      // and the jump back is at most one frame of the glide.
+      root.style.overflow = "hidden";
+      window.scrollTo(0, at);
+      setTimeout(function () { root.style.overflow = ""; }, 160);
+    }, { passive: true });
   }
 
   /* ---------- phone call-to-action bar ---------- */
@@ -1110,5 +1167,6 @@
   setupScrollFx();
   setupHeaderReveal();
   setupSmoothWheel();
+  setupTouchStops();
   setupMobileCta();
 })();

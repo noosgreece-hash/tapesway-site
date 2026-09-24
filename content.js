@@ -102,27 +102,28 @@ window.TAPESWAY_CONTENT = {
     Scroll pacing, in viewport heights of scrolling per beat. Smaller numbers
     play faster. "from"/"to" are seconds in the source clip, so the same plan
     works for the landscape and portrait sequences. A beat where from === to
-    is a still hold. The page stops once at the end of "open-hold", however
-    fast the first scroll, so the first screen is never skipped by accident.
+    is a still hold. However fast a scroll, the page stops once at the end of
+    "open-hold" and of the beats named in app.js STORY_STOPS, so no part of the
+    film is skipped by accident.
   */
   pacing: {
     desktop: [
       { id: "open-hold",  vh: 0.35, from: 0.0,  to: 0.0 },
-      { id: "push-in",    vh: 1.2,  from: 0.0,  to: 3.0 },
-      { id: "inside",     vh: 0.5,  from: 3.0,  to: 4.15 },
-      { id: "film-strip", vh: 1.9,  from: 4.15, to: 7.9 },
-      { id: "pull-out",   vh: 0.6,  from: 7.9,  to: 9.25 },
-      { id: "reveal",     vh: 1.05, from: 9.25, to: 12.0 },
+      { id: "push-in",    vh: 1.4,  from: 0.0,  to: 3.0 },
+      { id: "inside",     vh: 0.6,  from: 3.0,  to: 4.15 },
+      { id: "film-strip", vh: 2.2,  from: 4.15, to: 7.9 },
+      { id: "pull-out",   vh: 0.7,  from: 7.9,  to: 9.25 },
+      { id: "reveal",     vh: 1.2,  from: 9.25, to: 12.0 },
       { id: "final-hold", vh: 0.3,  from: 12.0, to: 12.0 }
     ],
     mobile: [
       { id: "open-hold",  vh: 0.25, from: 0.0,  to: 0.0 },
-      { id: "push-in",    vh: 0.8,  from: 0.0,  to: 3.0 },
-      { id: "inside",     vh: 0.35, from: 3.0,  to: 4.15 },
-      { id: "film-strip", vh: 1.25, from: 4.15, to: 7.9 },
-      { id: "pull-out",   vh: 0.45, from: 7.9,  to: 9.25 },
-      { id: "reveal",     vh: 0.7,  from: 9.25, to: 12.0 },
-      { id: "final-hold", vh: 0.2,  from: 12.0, to: 12.0 }
+      { id: "push-in",    vh: 1.1,  from: 0.0,  to: 3.0 },
+      { id: "inside",     vh: 0.5,  from: 3.0,  to: 4.15 },
+      { id: "film-strip", vh: 1.7,  from: 4.15, to: 7.9 },
+      { id: "pull-out",   vh: 0.6,  from: 7.9,  to: 9.25 },
+      { id: "reveal",     vh: 0.95, from: 9.25, to: 12.0 },
+      { id: "final-hold", vh: 0.25, from: 12.0, to: 12.0 }
     ]
   },
 

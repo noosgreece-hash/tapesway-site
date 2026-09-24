@@ -189,7 +189,7 @@
     fill("time", '<div class="wrap">' + head(t, "time") + prose(t.text, "prose--offset") +
         focusList(t.tasks, "tasks") +
         (t.tasksAfter ? '<p class="tasks-after">' + inline(t.tasksAfter) + "</p>" : "") + "</div>" +
-      split('<div class="time-highlight"><p class="highlight">' + inline(t.highlight) + "</p><p>" + inline(t.highlightText) + "</p></div>",
+      split('<div class="time-highlight"><p class="highlight">' + inline(t.highlight) + "</p>" + (t.highlightText ? "<p>" + inline(t.highlightText) + "</p>" : "") + "</div>",
         '<ol class="benefits" role="list">' + t.items.map(function (it, i) {
           return '<li class="benefit"><span class="num" aria-hidden="true">' + pad(i + 1) + "</span><h3>" + inline(it.title) + "</h3><div>" + paras(it.text) + "</div></li>";
         }).join("") + "</ol>", "split--time") +

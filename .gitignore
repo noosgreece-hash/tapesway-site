@@ -1,3 +1,13 @@
 .DS_Store
 media/*.new/
 media/*.old/
+
+# Console (Next.js app in console/)
+console/node_modules/
+console/.next/
+console/.env*.local
+console/.env
+console/.data/
+console/next-env.d.ts
+console/tsconfig.tsbuildinfo
+console/test-results/

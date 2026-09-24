@@ -239,6 +239,9 @@
         field("island", "text", false, false) +
         field("type", "text", true, false) +
         field("message", "textarea", true, true, c.messagePlaceholder ? ' placeholder="' + esc(c.messagePlaceholder) + '"' : "") +
+        // Spam trap: hidden from people and from the keyboard; bots that fill it are dropped by the console.
+        '<div class="sr-only" aria-hidden="true"><label for="f-gotcha">Leave empty</label>' +
+          '<input id="f-gotcha" name="_gotcha" type="text" tabindex="-1" autocomplete="off"></div>' +
         '<div class="form-foot"><button class="btn btn--primary" type="submit">' + esc(c.submitLabel) + " " + ARROW + "</button>" +
           '<p class="form-note">' + esc(c.note) + (mailto && UI.mailtoNote ? " " + esc(UI.mailtoNote) : "") + "</p></div>" +
         '<p class="form-status" role="status" aria-live="polite"></p>' +

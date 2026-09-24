@@ -299,6 +299,12 @@ html.is-preloading, html.is-preloading body { overflow: hidden; }
 @supports (height: 100svh) {
   .story-track { height: calc(100lvh + var(--travel, 8) * 100svh); }
 }
+/* Lenis smooth scrolling (from its lenis.css). */
+html.lenis, html.lenis body { height: auto; }
+.lenis:not(.lenis-autoToggle).lenis-stopped { overflow: clip; }
+.lenis [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-smooth iframe { pointer-events: none; }
+
 /* End of the opening hold. On touch screens, while the visitor is on the first
    screen, a swipe or flick can only end at the top or here; setupStory lifts
    this once the page has come to rest at the stop. The two markers are the

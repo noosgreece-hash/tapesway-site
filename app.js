@@ -12,6 +12,7 @@
   // the opening screen. setupStory fills storyStops in once the film is set up.
   var STORY_STOPS = ["push-in", "film-strip", "final-hold"];
   var storyStops = function () { return []; };
+  var lenis = null; // the Lenis smooth scroller, when it runs (setupLenis)
 
   /* ---------- helpers ---------- */
   function esc(s) {
@@ -472,7 +473,7 @@
     // scrolling is untouched): it speeds up and slows down gradually, so when the
     // visitor stops scrolling the film glides to rest instead of halting.
     // Lower OMEGA = longer, softer glide (settles in about 6.6 / OMEGA seconds).
-    var OMEGA = 4.8, JUMP = 1.0; // JUMP: target moves further than this (viewport heights) in one frame = cut, not glide
+    var OMEGA = lenis ? 6.5 : 4.8, JUMP = 1.0; // Lenis already smooths the scroll itself // JUMP: target moves further than this (viewport heights) in one frame = cut, not glide
     var misses = 0, gapSum = 0, targetT = 0, shownT = -1, velT = 0, prevTarget = -1, lastNow = 0, running = false, drawnKey = "";
 
     function motionOn() { return root.classList.contains("motion"); }
@@ -626,7 +627,7 @@
     // the page rests at the marker; further down, setupTouchStops takes over.
     var catchEl = $(".story-catch", track);
     var catchArmed = false, restTimer = 0, navUntil = 0;
-    function arm(on) { catchArmed = on; root.classList.toggle("catch-armed", on); }
+    function arm(on) { if (lenis) on = false; catchArmed = on; root.classList.toggle("catch-armed", on); }
     function travelPx() { return track.offsetHeight - stage.offsetHeight; }
     function catchOffset() {
       var first = timeline && timeline.segs[0];
@@ -766,7 +767,8 @@
       get tiles() { return seq ? seq.tiles : 0; },
       get decoded() { return seq ? seq.bitmaps.size : 0; },
       get preloaded() { return preDone; },
-      get stops() { return scrollStops(); }
+      get stops() { return scrollStops(); },
+      get lenis() { return lenis; }
     };
   }
 
@@ -836,12 +838,15 @@
       var glide = root.classList.contains("motion") && window.scrollY >= afterStory &&
         (!target || target === story ? false : target.getBoundingClientRect().top + window.scrollY >= afterStory);
       var behavior = glide ? "smooth" : "auto";
-      if (!target) {
+      if (lenis) {
+        lenis.scrollTo(target || 0, { immediate: !glide, force: true, duration: 1.2 }); // Lenis allows for the top bar's scroll-padding
+        if (!target) { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); return; }
+      } else if (!target) {
         window.scrollTo({ top: 0, behavior: behavior });
         if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
         return;
       }
-      target.scrollIntoView({ behavior: behavior, block: "start" });
+      if (!lenis) target.scrollIntoView({ behavior: behavior, block: "start" });
       // Move keyboard focus with the view, without a second jump.
       if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
       try { target.focus({ preventScroll: true }); } catch (err) { target.focus(); }
@@ -888,13 +893,85 @@
     return null;
   }
 
+  // Lenis (vendor/lenis.min.js) gives the whole page the smooth, weighted
+  // scrolling of premium sites: the wheel and trackpad glide, and on touch
+  // screens the finger moves the page directly and a flick coasts to a soft stop.
+  // The scroll stops hold on top of it: a swipe or flick that would pass one
+  // glides to rest there instead, and the rest of that wheel swipe is let go.
+  // Without Lenis (or with reduced motion) setupSmoothWheel and setupTouchStops
+  // below do a simpler version of the same.
+  function setupLenis() {
+    if (!root.classList.contains("motion") || typeof window.Lenis !== "function") return;
+    var GAP = 220, HOLD = 800, HOLD_MAX = 2500, HOLD_GAP = 140;
+    var lastWheel = 0, from = 0, stops = [], heldAt = 0, lastSwallow = 0, lastDy = 0, touchFrom = 0;
+    function blocked() { return root.classList.contains("is-preloading") || document.body.classList.contains("menu-open"); }
+    function virtualScroll(data) {
+      var e = data.event, dy = data.deltaY, now = performance.now();
+      if (blocked()) {
+        // The page stays put behind the menu or the preloader; taps still work,
+        // and the menu itself scrolls natively.
+        var inMenu = e.target && e.target.closest && e.target.closest("#site-menu");
+        if (!inMenu && (e.type === "wheel" || e.type === "touchmove") && e.cancelable) e.preventDefault();
+        return false;
+      }
+      if (e.ctrlKey || Math.abs(data.deltaX) > Math.abs(dy)) return true;
+      if (e.type === "wheel") {
+        if (heldAt) {
+          // Resting at a stop: let go of the rest of that swipe (see setupSmoothWheel).
+          var rest = now - heldAt, same = dy * lastDy > 0, a = Math.abs(dy), b = Math.abs(lastDy);
+          var fading = same && (a < b || (a === b && a < 40));
+          if (same && rest < HOLD_MAX && (rest < HOLD || (now - lastSwallow < HOLD_GAP && fading))) {
+            lastSwallow = now; lastDy = dy; if (e.cancelable) e.preventDefault(); return false;
+          }
+          heldAt = 0; lastWheel = 0;
+        }
+        lastDy = dy;
+        if (now - lastWheel > GAP) { from = lenis.targetScroll; stops = scrollStops(); } // a new swipe
+        lastWheel = now;
+        var at = stopBetween(stops, from, lenis.targetScroll + dy);
+        if (at !== null) { data.deltaY = at - lenis.targetScroll; heldAt = lastSwallow = now; }
+        return true;
+      }
+      if (e.type === "touchstart") touchFrom = lenis.targetScroll;
+      if (e.type === "touchend") {
+        // The flick's coast is worked out by Lenis; if it would pass a stop, end it there.
+        // A swipe that began on the first screen always settles at the end of it.
+        var start = lenis.targetScroll, list = scrollStops(), first = storyStops()[0];
+        setTimeout(function () {
+          var stop = stopBetween(list, start, lenis.targetScroll);
+          if (first && touchFrom < first - 2 && lenis.targetScroll > first) stop = first;
+          if (stop !== null) lenis.scrollTo(stop, { lerp: lenis.options.syncTouchLerp, force: true });
+        }, 0);
+      }
+      return true;
+    }
+    lenis = new window.Lenis({
+      lerp: 0.085,              // wheel glide: lower is smoother and longer
+      wheelMultiplier: 0.8,     // each wheel step scrolls a little less
+      syncTouch: true,          // touch coasts through Lenis too
+      syncTouchLerp: 0.06,
+      touchInertiaExponent: 1.55, // shorter flicks than Lenis's 1.7
+      prevent: function (node) { return node.id === "site-menu" || node.tagName === "TEXTAREA"; }, // these scroll natively
+      virtualScroll: virtualScroll,
+      autoRaf: true
+    });
+    root.classList.remove("catch-armed");
+    window.addEventListener("load", function () { lenis.resize(); });
+    // Keys scroll natively; end any glide first so it doesn't pull against them.
+    window.addEventListener("keydown", function (e) {
+      if (/^(PageDown|PageUp|End|Home|ArrowDown|ArrowUp| )$/.test(e.key) && lenis.isScrolling === "smooth") {
+        lenis.scrollTo(lenis.animatedScroll, { immediate: true, force: true });
+      }
+    }, true);
+  }
+
   // Wheel and trackpad scrolling eases into place on the whole page, a little
   // slower than the browser's own, and halts at the scroll stops: the rest of the
   // swipe that reached a stop (its momentum included) is let go. Touch, keyboard,
   // the scrollbar and links keep the browser's own scrolling, and any of them
   // stops an easing in progress. The film glides on its own spring on top of this.
   function setupSmoothWheel() {
-    if (!root.classList.contains("motion")) return;
+    if (!root.classList.contains("motion") || lenis) return;
     var TIME = 190;               // ms for the remaining distance to shrink by ~63%
     var SPEED = 0.8;              // share of each wheel step that is scrolled
     var GAP = 220;                // ms without wheel events that ends a swipe
@@ -965,7 +1042,7 @@
   // Touch screens: the finger always moves the page freely, but once it lets go,
   // the flick's glide ends at the first scroll stop it reaches.
   function setupTouchStops() {
-    if (!root.classList.contains("motion")) return;
+    if (!root.classList.contains("motion") || lenis) return;
     var touching = false, moved = false, armed = false, from = 0, stops = [];
     window.addEventListener("touchstart", function () { touching = true; moved = false; armed = false; }, { passive: true });
     window.addEventListener("touchmove", function () { moved = true; }, { passive: true });
@@ -1159,6 +1236,7 @@
   // into index.html, so search engines and link previews read it without scripts.
   if (/[?&]prerender(&|$)/.test(location.search)) return;
   setupMenu();
+  setupLenis();
   setupStory();
   setupForm();
   setupAnchors();

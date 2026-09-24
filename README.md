@@ -33,6 +33,11 @@ The top bar stays hidden while the film plays and slides in as the story ends (`
 
 Safety rules in `app.js`: anything that would be taller than the screen does not stick (it simply scrolls), so no text is ever hidden; with reduced motion everything is shown plainly and nothing moves. The code is `setupReveals` and `setupScrollFx`; the styles are under "Motion" in `styles.css`.
 
+## Search engines, link previews and calls to action
+- `index.html` carries the title, description, canonical address, link-preview tags (`brand/og-image.jpg`, 1200×630) and a JSON-LD description of the business (only facts stated on the page). `robots.txt` and `sitemap.xml` sit at the root.
+- The section text is also written into `index.html` so search engines, link previews and visitors without JavaScript read the whole page. **After editing `content.js`, run `node tools/prerender.js`** (needs Playwright) to refresh it; it also copies `meta.title` and `meta.description` into the head. The live page renders from `content.js` either way.
+- `content.js` → `cta` sets the button repeated under the hero and after the sections in `after`, with a short reassurance line, and the bar at the bottom of phone screens (`setupMobileCta`), shown from the first section after the hero until the contact form is on screen.
+
 ## Type
 Headings use Noto Serif Display and body text Inter Tight, both with full Greek. Fraunces (Latin only) sets the tapesway wordmark, the lettering on the table and the numerals. Each family ships as separate Greek and Latin files, and the browser fetches only what a page uses. Labels are in sentence case on purpose, because upper-casing Greek misplaces accents in some browsers.
 

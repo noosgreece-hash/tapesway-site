@@ -13,8 +13,10 @@
 */
 window.TAPESWAY_CONTENT = {
   meta: {
-    title: "tapesway · Περιεχόμενο που δημιουργεί επιθυμία",
-    description: "Δημιουργούμε περιεχόμενο για επιχειρήσεις στα ελληνικά νησιά που θέλουν να ξεχωρίζουν, να δημιουργούν εμπιστοσύνη και να μετατρέπουν το ενδιαφέρον των επισκεπτών σε πραγματικές επισκέψεις."
+    // Search results show about 60 characters of the title and 150 of the description.
+    // Keep index.html's <title> and description in step with these (tools/prerender.js does it).
+    title: "tapesway · Περιεχόμενο social media για επιχειρήσεις στα νησιά",
+    description: "Reels, TikTok και posts κάθε εβδομάδα για ξενοδοχεία, εστιατόρια και επιχειρήσεις στα ελληνικά νησιά, στα αγγλικά, γερμανικά, ιταλικά και γαλλικά. Έδρα η Μύκονος."
   },
 
   brand: {
@@ -30,6 +32,19 @@ window.TAPESWAY_CONTENT = {
     { label: "Επικοινωνία", href: "#contact" }
   ],
   navCta: { label: "Ξεκινήστε μαζί μας", href: "#contact" },
+
+  /*
+    The same invitation repeated down the page, so there is always a next step:
+    a button with a short reassurance under the hero buttons and after the
+    sections listed in "after", plus a bar at the bottom of phone screens
+    from the first section after the hero (hidden while the contact form is in view).
+  */
+  cta: {
+    label: "Ξεκινήστε μαζί μας",
+    href: "#contact",
+    note: "Χωρίς δεσμεύσεις. Απαντάμε εντός 24 ωρών.",
+    after: ["offer", "work", "process", "time"]
+  },
 
   /* Small interface wording: menu, accessibility labels and form messages. */
   ui: {
@@ -126,7 +141,7 @@ window.TAPESWAY_CONTENT = {
     eyebrow: "Περιεχόμενο με σκοπό.",
     title: ["Δεν αρκεί να σας βλέπουν.", "Πρέπει να θέλουν να έρθουν."],
     text: [
-      "Δημιουργούμε περιεχόμενο που παρουσιάζει την επιχείρησή σας με τρόπο αυθεντικό, σύγχρονο και ουσιαστικό.",
+      "Δημιουργούμε περιεχόμενο για τα social media που παρουσιάζει την επιχείρησή σας με τρόπο αυθεντικό, σύγχρονο και ουσιαστικό.",
       "Γιατί ο επισκέπτης δεν επιλέγει μόνο αυτό που βλέπει. Επιλέγει αυτό που πιστεύει ότι θα ζήσει."
     ],
     highlight: "Η σωστή εικόνα μπορεί να γίνει η αρχή μιας πραγματικής εμπειρίας.",

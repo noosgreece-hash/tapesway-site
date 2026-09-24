@@ -3,7 +3,7 @@
 export const LEAD_STATUSES = ["new", "contacted", "proposal", "won", "lost"] as const;
 export type LeadStatus = (typeof LEAD_STATUSES)[number];
 
-export const LANGS = ["EN", "DE", "FR", "EL"] as const;
+export const LANGS = ["EN", "DE", "IT", "FR", "EL"] as const;
 export type Lang = (typeof LANGS)[number];
 
 export const CLIENT_STATUSES = ["active", "paused"] as const;

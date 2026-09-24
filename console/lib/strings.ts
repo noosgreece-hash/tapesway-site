@@ -190,7 +190,7 @@ export const t = {
       submitNew: "Add client",
       submitEdit: "Save changes",
     },
-    langs: { EN: "English", DE: "German", FR: "French", EL: "Greek" },
+    langs: { EN: "English", DE: "German", IT: "Italian", FR: "French", EL: "Greek" },
   },
 
   jobs: {
@@ -333,7 +333,7 @@ export const client = {
   download: "Λήψη βίντεο",
   downloadText: "Λήψη κειμένων",
   noVideo: "Demo: δεν υπάρχει ακόμη αρχείο βίντεο",
-  langs: { EN: "Αγγλικά", DE: "Γερμανικά", FR: "Γαλλικά", EL: "Ελληνικά" },
+  langs: { EN: "Αγγλικά", DE: "Γερμανικά", IT: "Ιταλικά", FR: "Γαλλικά", EL: "Ελληνικά" },
   footer: "Για οτιδήποτε χρειαστείτε, απαντήστε στο email μας.",
   notFoundTitle: "Ο σύνδεσμος δεν βρέθηκε",
   notFoundText: "Ο σύνδεσμος μπορεί να έχει αλλάξει. Επικοινωνήστε μαζί μας για έναν νέο.",

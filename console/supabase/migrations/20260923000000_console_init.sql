@@ -59,7 +59,7 @@ create table if not exists public.clients (
   phone text not null default '',
   island text not null default '',
   business_type text not null default '',
-  languages text[] not null default '{EN}' check (languages <@ array['EN', 'DE', 'FR', 'EL']),
+  languages text[] not null default '{EN}' check (languages <@ array['EN', 'DE', 'IT', 'FR', 'EL']),
   tone_of_voice text not null default '',
   audience text not null default '',
   dos text not null default '',

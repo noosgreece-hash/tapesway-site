@@ -299,6 +299,15 @@ html.is-preloading, html.is-preloading body { overflow: hidden; }
 @supports (height: 100svh) {
   .story-track { height: calc(100lvh + var(--travel, 8) * 100svh); }
 }
+/* End of the opening hold. On touch screens, while the visitor is on the first
+   screen, a swipe or flick can only end at the top or here; setupStory lifts
+   this once the page has come to rest at the stop. The two markers are the
+   snap points (the track itself is too tall to be one). */
+.story-top, .story-catch { position: absolute; left: 0; top: 0; width: 1px; height: 1px; pointer-events: none; }
+@media (hover: none) and (pointer: coarse) {
+  html.motion.catch-armed { scroll-snap-type: y mandatory; scroll-padding-top: 0; }
+  html.motion.catch-armed .story-top, html.motion.catch-armed .story-catch { scroll-snap-align: start; scroll-snap-stop: always; }
+}
 .story-stage {
   position: sticky; top: 0;
   height: 100vh; height: 100lvh;

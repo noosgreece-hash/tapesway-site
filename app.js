@@ -86,7 +86,7 @@
           "</picture>" +
           '<canvas class="story-canvas" aria-hidden="true"></canvas>' +
           tableTitle(S.tableTitle) +
-          '<div class="scroll-cue" data-copy="cue" aria-hidden="true"><i></i></div>' +
+          '<div class="scroll-cue" data-copy="cue" aria-hidden="true"><svg viewBox="0 0 22 52" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M11 1v48M3 41l8 8 8-8"/></svg></div>' +
           '<div class="story-hud" aria-hidden="true"><div class="story-progress"><b></b></div></div>' +
           '<a class="story-skip" href="' + esc(S.skipHref) + '">' + esc(S.skipLabel) + ' <span aria-hidden="true">↓</span></a>' +
         "</div>" +
@@ -168,7 +168,9 @@
 
     var a = C.approach;
     fill("approach", split(head(a, "approach"),
-      focusList(a.statements, "statements") + prose(a.text) + focusList(a.questions, "questions") + closing(a.closing)));
+      focusList(a.statements, "statements") + prose(a.text) +
+      // The questions and their answer hold on screen for a moment before the page moves on.
+      '<div class="hold"><div class="hold-in">' + focusList(a.questions, "questions") + closing(a.closing) + "</div></div>"));
 
     var l = C.languages;
     fill("languages", '<div class="wrap lang-grid"><div>' + head(l, "languages") + prose(l.text) + closing(l.closing) + "</div>" +
@@ -490,7 +492,7 @@
       // Loading failed or motion is not wanted: show the composed static story.
       preloadDone();
       if (seq) { seq.destroy(); seq = null; }
-      root.classList.remove("motion");
+      root.classList.remove("motion", "in-story");
       root.classList.add("no-motion");
     }
 
@@ -780,6 +782,77 @@
     });
   }
 
+  /* ---------- the film's end: top bar and wheel smoothing ---------- */
+  // Where the story stops holding the screen and the page starts.
+  function storyEnd() {
+    var story = $("#story");
+    return story ? story.offsetTop + story.offsetHeight - window.innerHeight : 0;
+  }
+
+  // The top bar stays out of the way while the film plays and slides in as it ends.
+  function setupHeaderReveal() {
+    if (!root.classList.contains("motion")) return;
+    var queued = false;
+    function update() {
+      queued = false;
+      root.classList.toggle("in-story", root.classList.contains("motion") && window.scrollY < storyEnd() - 8);
+    }
+    function queue() { if (!queued) { queued = true; requestAnimationFrame(update); } }
+    window.addEventListener("scroll", queue, { passive: true });
+    window.addEventListener("resize", queue);
+    update();
+  }
+
+  // Below the story, wheel and trackpad scrolling ease into place instead of
+  // jumping; the story itself already glides on its own spring, so it is left
+  // alone. Touch, keyboard, the scrollbar and links keep the browser's own
+  // scrolling, and any of them stops an easing in progress.
+  function setupSmoothWheel() {
+    if (!root.classList.contains("motion")) return;
+    var TIME = 150;               // ms for the remaining distance to shrink by ~63%
+    var target = null, cur = 0, last = 0, raf = 0;
+    function maxY() { return document.documentElement.scrollHeight - window.innerHeight; }
+    function stop() { if (raf) cancelAnimationFrame(raf); raf = 0; target = null; last = 0; }
+    function frame(now) {
+      var dt = Math.min(50, last ? now - last : 16.7); last = now;
+      var d = target - cur;
+      if (Math.abs(d) < 0.5) { window.scrollTo(0, target); stop(); return; }
+      var move = d * (1 - Math.exp(-dt / TIME));
+      if (Math.abs(move) < 0.5) move = d > 0 ? Math.min(d, 0.5) : Math.max(d, -0.5);
+      cur += move;
+      window.scrollTo(0, cur);
+      raf = requestAnimationFrame(frame);
+    }
+    function scrollsItself(el, dy) {
+      for (; el && el !== document.body && el !== document.documentElement; el = el.parentElement) {
+        if (el.scrollHeight <= el.clientHeight + 1) continue;
+        var oy = getComputedStyle(el).overflowY;
+        if (oy !== "auto" && oy !== "scroll") continue;
+        if (dy > 0 ? el.scrollTop + el.clientHeight < el.scrollHeight - 1 : el.scrollTop > 0) return true;
+      }
+      return false;
+    }
+    window.addEventListener("wheel", function (e) {
+      if (e.defaultPrevented || e.ctrlKey || e.metaKey || !root.classList.contains("motion")) return;
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      var menu = $("#site-menu");
+      if (menu && !menu.hidden) return;
+      var dy = e.deltaY * (e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? window.innerHeight : 1);
+      if (!dy || scrollsItself(e.target, dy)) return;
+      var end = storyEnd(), y = window.scrollY;
+      var base = target === null ? y : target;
+      if (y < end - 1 || (dy < 0 && base <= end + 1)) { stop(); return; }   // in the story: its own glide
+      e.preventDefault();
+      if (target === null) cur = y;
+      target = Math.max(end, Math.min(maxY(), base + dy));
+      if (!raf) raf = requestAnimationFrame(frame);
+    }, { passive: false });
+    ["pointerdown", "touchstart", "keydown"].forEach(function (t) {
+      window.addEventListener(t, function () { if (raf) stop(); }, { passive: true });
+    });
+    window.addEventListener("resize", function () { if (target !== null) target = Math.min(target, maxY()); });
+  }
+
   /* ---------- current section in the menu ---------- */
   function setupActiveNav() {
     if (!("IntersectionObserver" in window)) return;
@@ -835,7 +908,8 @@
   function setupScrollFx() {
     var motion = root.classList.contains("motion");
     var pillars = $(".pillars"), cards = pillars ? $$(".pillar", pillars) : [];
-    var asides = $$(".split-aside"), lists = $$(".focus-list");
+    var asides = $$(".split-aside"), lists = $$(".focus-list").filter(function (l) { return !l.closest(".hold"); });
+    var holds = $$(".hold"), PIN = 0.85; // how long a hold stays, in screen heights
     var result = $(".result"), zoom = $(".work-zoom");
     var queued = false;
 
@@ -853,6 +927,17 @@
         if (!fits) cards.forEach(function (c) { c.firstElementChild.style.removeProperty("--cover"); });
       }
       asides.forEach(function (a) { a.classList.toggle("no-stick", a.offsetHeight > r - 24); });
+      holds.forEach(function (h) {
+        var inner = h.firstElementChild, fits = motion && inner.offsetHeight < r - 24;
+        h.classList.toggle("is-held", fits);
+        if (fits) {
+          var hd = $(".site-header"), top = hd ? hd.getBoundingClientRect().height : 0;
+          h.style.setProperty("--hold-top", Math.max(top + 24, (window.innerHeight + top - inner.offsetHeight) / 2) + "px");
+          h.style.setProperty("--hold-h", Math.round(inner.offsetHeight + window.innerHeight * PIN) + "px");
+        } else {
+          h.style.removeProperty("--hold-top"); h.style.removeProperty("--hold-h");
+        }
+      });
       update();
     }
     function update() {
@@ -875,6 +960,22 @@
         // 0 as the list's top reaches 85% of the screen, 1 as its bottom passes 50%
         var p = clamp((vh * 0.85 - r.top) / (r.height + vh * 0.35), 0, 1);
         for (var i = 0; i < n; i++) items[i].style.setProperty("--lit", clamp(p * n - i, 0, 1).toFixed(3));
+      });
+      holds.forEach(function (h) {
+        var inner = h.firstElementChild, q = $(".focus-list", inner), c = $(".closing", inner);
+        var p;
+        if (h.classList.contains("is-held")) {
+          // from just before the block settles in place (0) to when it lets go (1)
+          var top = parseFloat(h.style.getPropertyValue("--hold-top")) || 0;
+          p = clamp((top - h.getBoundingClientRect().top) / (vh * PIN) + 0.12, 0, 1);
+        } else {
+          var hr = inner.getBoundingClientRect();
+          p = clamp((vh * 0.85 - hr.top) / (hr.height + vh * 0.35), 0, 1);
+        }
+        // the questions light up one by one, then the answer
+        var steps = (q ? q.children.length : 0) + (c ? 1 : 0), k = 0;
+        if (q) for (var i = 0; i < q.children.length; i++, k++) q.children[i].style.setProperty("--lit", clamp(p * 1.25 * steps - k, 0, 1).toFixed(3));
+        if (c) c.style.setProperty("--lit", clamp(p * 1.25 * steps - k, 0, 1).toFixed(3));
       });
       if (result) {
         var rr = result.getBoundingClientRect();
@@ -904,4 +1005,6 @@
   setupActiveNav();
   setupReveals();
   setupScrollFx();
+  setupHeaderReveal();
+  setupSmoothWheel();
 })();

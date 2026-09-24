@@ -90,6 +90,7 @@
           '<div class="story-hud" aria-hidden="true"><div class="story-progress"><b></b></div></div>' +
           '<a class="story-skip" href="' + esc(S.skipHref) + '">' + esc(S.skipLabel) + ' <span aria-hidden="true">↓</span></a>' +
         "</div>" +
+        '<div class="story-top" aria-hidden="true"></div><div class="story-catch" aria-hidden="true"></div>' +
       "</div>" +
       // Motion-free version: the same story as three stills.
       '<div class="story-static">' +
@@ -571,6 +572,7 @@
       var w = Math.round(stage.clientWidth * dpr), h = Math.round(stage.clientHeight * dpr);
       if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; drawnKey = ""; }
       placeTitle();
+      placeCatch();
     }
     function paint(c) {
       var cw = canvas.width, ch = canvas.height, iw = c.sw, ih = c.sh;
@@ -612,6 +614,61 @@
       var scrolled = clamp(-track.getBoundingClientRect().top, 0, Math.max(travel, 0));
       return travel > 0 ? (scrolled / travel) * timeline.total : 0;
     }
+    // First screen catch: however fast the first scroll, the page stops once where
+    // the opening hold ends and rests there a moment, so the first screen is never
+    // skipped by accident. Wheels and trackpads are held here in script; on touch
+    // screens the "catch-armed" class makes the top and the .story-catch marker the
+    // only places a swipe can end (styles.css), until the page rests at the marker.
+    var catchEl = $(".story-catch", track), CATCH_MS = 450, CATCH_MAX = 1100, CATCH_GAP = 140;
+    var catchArmed = false, caughtAt = 0, lastSwallow = 0, restTimer = 0, navUntil = 0;
+    function arm(on) { catchArmed = on; root.classList.toggle("catch-armed", on); }
+    function catchOffset() {
+      var first = timeline && timeline.segs[0];
+      if (!first || first.f0 !== first.f1) return 0;
+      var travel = track.offsetHeight - stage.offsetHeight;
+      return travel > 0 ? Math.round(first.end / timeline.total * travel) : 0;
+    }
+    function placeCatch() { if (catchEl) catchEl.style.top = catchOffset() + "px"; }
+    function catchY() { return track.getBoundingClientRect().top + window.scrollY + catchOffset(); }
+    window.addEventListener("wheel", function (e) {
+      if (e.defaultPrevented || e.ctrlKey || e.metaKey || !motionOn() || !timeline) return;
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      var now = performance.now();
+      if (caughtAt) {
+        // Resting: swallow the rest of the gesture that was caught (its momentum
+        // included) until a short pause after CATCH_MS, and never past CATCH_MAX.
+        var rest = now - caughtAt;
+        if (e.deltaY > 0 && rest < CATCH_MAX && (rest < CATCH_MS || now - lastSwallow < CATCH_GAP)) {
+          lastSwallow = now; e.preventDefault(); return;
+        }
+        caughtAt = 0;
+      }
+      var dy = e.deltaY * (e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? window.innerHeight : 1);
+      if (!catchArmed || dy <= 0) return;
+      var y = window.scrollY, stop = catchY();
+      if (stop <= 0 || y >= stop - 1) return;
+      // Scroll the hold in script (the picture doesn't change there), so no native
+      // smooth-scroll animation already under way can carry the page past the stop.
+      e.preventDefault();
+      var ny = Math.min(stop, y + dy);
+      window.scrollTo(0, ny);
+      if (ny >= stop) { arm(false); caughtAt = lastSwallow = now; }
+    }, { passive: false });
+    window.addEventListener("scroll", function () {
+      if (!motionOn()) return;
+      var y = window.scrollY, stop = catchY();
+      // Re-arms once the visitor is back on the first screen.
+      if (!catchArmed) { if (y < stop * 0.5 && performance.now() > navUntil) arm(true); return; }
+      // Touch: lift the catch once the page has come to rest at the stop (or past it, after a slow drag).
+      clearTimeout(restTimer);
+      if (y >= stop * 0.5) restTimer = setTimeout(function () { if (window.scrollY >= catchY() * 0.5) arm(false); }, 180);
+    }, { passive: true });
+    // Links and keys that move the page (the skip link, the logo, Page Down) go where they point.
+    function letGo() { arm(false); navUntil = performance.now() + 1500; }
+    document.addEventListener("click", function (e) { if (e.target.closest && e.target.closest('a[href^="#"]')) letGo(); }, true);
+    window.addEventListener("keydown", function (e) { if (/^(PageDown|PageUp|End|Home|ArrowDown|ArrowUp| )$/.test(e.key)) letGo(); });
+    arm(motionOn() && window.scrollY < 2);
+
     function render(t) {
       var f = frameAt(t);
       if (seq && String(Math.round(f)) !== drawnKey) show(f);
@@ -657,6 +714,7 @@
       // Provisional timeline so the page has the right height before the manifest arrives.
       timeline = buildTimeline(pacing, 24, 289);
       track.style.setProperty("--travel", timeline.total);
+      placeCatch();
       request();
       if (!motionOn()) return;
       fetch(src, { cache: "no-cache" }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
@@ -664,6 +722,7 @@
           if (variantName !== name || !motionOn()) return;
           timeline = buildTimeline(pacing, m.fps, m.count);
           track.style.setProperty("--travel", timeline.total);
+          placeCatch();
               seq = new Sequence(m, base);
           seq.onframe = function () { drawnKey = ""; request(); };
           seq.onfatal = fallback;

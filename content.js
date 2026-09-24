@@ -102,11 +102,12 @@ window.TAPESWAY_CONTENT = {
     Scroll pacing, in viewport heights of scrolling per beat. Smaller numbers
     play faster. "from"/"to" are seconds in the source clip, so the same plan
     works for the landscape and portrait sequences. A beat where from === to
-    is a still hold.
+    is a still hold. The page stops once at the end of "open-hold", however
+    fast the first scroll, so the first screen is never skipped by accident.
   */
   pacing: {
     desktop: [
-      { id: "open-hold",  vh: 0.15, from: 0.0,  to: 0.0 },
+      { id: "open-hold",  vh: 0.35, from: 0.0,  to: 0.0 },
       { id: "push-in",    vh: 1.2,  from: 0.0,  to: 3.0 },
       { id: "inside",     vh: 0.5,  from: 3.0,  to: 4.15 },
       { id: "film-strip", vh: 1.9,  from: 4.15, to: 7.9 },
@@ -115,7 +116,7 @@ window.TAPESWAY_CONTENT = {
       { id: "final-hold", vh: 0.3,  from: 12.0, to: 12.0 }
     ],
     mobile: [
-      { id: "open-hold",  vh: 0.1,  from: 0.0,  to: 0.0 },
+      { id: "open-hold",  vh: 0.25, from: 0.0,  to: 0.0 },
       { id: "push-in",    vh: 0.8,  from: 0.0,  to: 3.0 },
       { id: "inside",     vh: 0.35, from: 3.0,  to: 4.15 },
       { id: "film-strip", vh: 1.25, from: 4.15, to: 7.9 },

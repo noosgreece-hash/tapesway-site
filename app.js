@@ -156,6 +156,7 @@
       '<div class="intro-body">' + prose(h.text) +
         '<div class="intro-aside">' + (h.highlight ? '<p class="highlight">' + inline(h.highlight) + "</p>" : "") +
           '<div class="actions">' + h.actions.map(function (a) { return btn(a, "btn--" + (a.style || "primary")); }).join("") + "</div>" +
+          (C.cta && C.cta.note ? '<p class="cta-note">' + inline(C.cta.note) + "</p>" : "") +
         "</div>" +
       "</div></div>");
 
@@ -204,6 +205,17 @@
       '<ul class="values" role="list">' + v.items.map(function (it) {
         return "<li><h3>" + inline(it.title) + "</h3><p>" + inline(it.text) + "</p></li>";
       }).join("") + "</ul>"));
+
+    // The next step, repeated after the sections that make the case.
+    var cta = C.cta;
+    if (cta) (cta.after || []).forEach(function (name) {
+      var sec = $('[data-render="' + name + '"]');
+      if (!sec) return;
+      var dark = sec.classList.contains("on-dark");
+      sec.insertAdjacentHTML("beforeend", '<div class="wrap cta-row">' + btn(cta, dark ? "btn--light" : "btn--primary") +
+        (cta.note ? '<p class="cta-note">' + inline(cta.note) + "</p>" : "") + "</div>");
+    });
+    fill("mobilecta", cta ? btn(cta, "btn--primary") : "");
 
     var c = C.contact, f = c.fields;
     var mailto = !c.formEndpoint;
@@ -814,6 +826,8 @@
     function maxY() { return document.documentElement.scrollHeight - window.innerHeight; }
     function stop() { if (raf) cancelAnimationFrame(raf); raf = 0; target = null; last = 0; }
     function frame(now) {
+      // Something else moved the page (a link, a script, the scrollbar): let it win.
+      if (Math.abs(window.scrollY - cur) > 3) { stop(); return; }
       var dt = Math.min(50, last ? now - last : 16.7); last = now;
       var d = target - cur;
       if (Math.abs(d) < 0.5) { window.scrollTo(0, target); stop(); return; }
@@ -853,6 +867,28 @@
     window.addEventListener("resize", function () { if (target !== null) target = Math.min(target, maxY()); });
   }
 
+  /* ---------- phone call-to-action bar ---------- */
+  // On phones a slim bar with the main button sits at the bottom from the
+  // first section after the hero, and steps away while the contact form is on screen.
+  function setupMobileCta() {
+    var bar = $(".mobile-cta"), contact = $("#contact"), menu = $("#site-menu"), first = $("#offer");
+    if (!bar || !contact) return;
+    var queued = false;
+    function update() {
+      queued = false;
+      var vh = window.innerHeight, c = contact.getBoundingClientRect();
+      // from the section after the hero (which has its own buttons) until the form comes into view
+      var start = (first || contact).getBoundingClientRect().top;
+      var show = start < vh * 0.6 && c.top > vh * 0.9 && !(menu && !menu.hidden);
+      bar.classList.toggle("is-shown", show);
+    }
+    function queue() { if (!queued) { queued = true; requestAnimationFrame(update); } }
+    window.addEventListener("scroll", queue, { passive: true });
+    window.addEventListener("resize", queue);
+    document.addEventListener("click", queue);
+    update();
+  }
+
   /* ---------- current section in the menu ---------- */
   function setupActiveNav() {
     if (!("IntersectionObserver" in window)) return;
@@ -874,7 +910,7 @@
   // Nothing moves again once it has arrived.
   var REVEAL = [
     [".section .head .eyebrow, .section .head .line, .section .prose > p, .intro-aside .highlight, .intro-aside .actions," +
-     " .closing .line, .tasks-after, .time-highlight > p, .focus-list, .work-frame, .contact-details, .form .field, .form-foot", "rv"],
+     " .closing .line, .tasks-after, .time-highlight > p, .focus-list, .work-frame, .contact-details, .form .field, .form-foot, .cta-row", "rv"],
     [".pillar, .step, .benefit, .values > li", "rv rv-3d"],
     [".codes span", "rv rv-flip"]
   ];
@@ -998,6 +1034,9 @@
   renderHeader();
   renderStory();
   renderSections();
+  // tools/prerender.js loads the page with ?prerender to copy the rendered text
+  // into index.html, so search engines and link previews read it without scripts.
+  if (/[?&]prerender(&|$)/.test(location.search)) return;
   setupMenu();
   setupStory();
   setupForm();
@@ -1007,4 +1046,5 @@
   setupScrollFx();
   setupHeaderReveal();
   setupSmoothWheel();
+  setupMobileCta();
 })();

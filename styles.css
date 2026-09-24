@@ -380,6 +380,7 @@ html.no-motion .story-static { display: block; }
 .static-chapter { position: relative; }
 .static-chapter picture img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
 .story-noscript { color: var(--cream); padding: calc(var(--header-h) + 40px) var(--gutter) 60px; }
+.story-noscript-brand { font-family: var(--font-brand); font-size: clamp(40px, 8vw, 96px); line-height: 1; margin: 24px 0 0; }
 
 /* ---------- Mobile story composition ---------- */
 @media (max-width: 767px), (max-aspect-ratio: 4/5) {
@@ -446,6 +447,33 @@ html.no-motion .story-static { display: block; }
 @media (max-width: 899px) {
   .intro-body { grid-template-columns: 1fr; }
   .actions .btn { flex: 1 1 220px; }
+}
+
+/* Calls to action: the same button, repeated after the sections that make the case */
+.cta-note { margin: 12px 0 0; font-size: 14px; color: var(--muted); }
+.on-dark .cta-note { color: var(--muted-dark); }
+.cta-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px;
+  margin-top: clamp(48px, 6vw, 80px);
+}
+.cta-row .cta-note { margin: 0; }
+@media (max-width: 599px) { .cta-row .btn { width: 100%; } }
+
+/* Phones: a slim bar with the main button once the story has played; hidden while the form is on screen */
+.mobile-cta { display: none; }
+@media (max-width: 767px) {
+  .mobile-cta {
+    display: block; position: fixed; z-index: 40; left: 0; right: 0; bottom: 0;
+    padding: 10px max(16px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left));
+    background: rgba(17, 19, 24, .92);
+    -webkit-backdrop-filter: saturate(140%) blur(10px); backdrop-filter: saturate(140%) blur(10px);
+    border-top: 1px solid var(--line-dark);
+    transform: translateY(110%); visibility: hidden;
+    transition: transform .4s var(--ease), visibility 0s .4s;
+  }
+  .mobile-cta.is-shown { transform: none; visibility: visible; transition: transform .4s var(--ease), visibility 0s; }
+  .mobile-cta .btn { width: 100%; background: var(--navy); color: #fff; }
+  html.js .site-footer { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
 }
 
 /* Split: on wide screens the aside holds still while the main column scrolls past it */

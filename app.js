@@ -9,8 +9,9 @@
   var MOBILE_MQ = "(max-width: 767px), (max-aspect-ratio: 4/5)";
   var mq = window.matchMedia(MOBILE_MQ);
   // Beats of the film (content.js pacing ids) whose end is a scroll stop, besides
-  // the opening screen. setupStory fills storyStops in once the film is set up.
-  var STORY_STOPS = ["push-in", "film-strip", "final-hold"];
+  // the opening screen. None for now: stops mid-page made scrolling feel like it
+  // braked. setupStory fills storyStops in once the film is set up.
+  var STORY_STOPS = [];
   var storyStops = function () { return []; };
   var lenis = null; // the Lenis smooth scroller, when it runs (setupLenis)
 
@@ -891,21 +892,13 @@
     update();
   }
 
-  // Scroll stops: the film's opening screen and main beats, the end of the film
-  // and the start of every section (under the top bar). However hard a swipe or
-  // flick, it ends at the next stop, so nothing is skipped by accident; the next
-  // swipe carries on from there. Only stops ahead of where a swipe began count.
+  // Scroll stops: only the film's opening screen (plus any STORY_STOPS beats).
+  // However hard a swipe or flick, it ends there, so the first screen is never
+  // skipped by accident; the next swipe carries on. Everywhere else the page
+  // flows freely (stops at every section felt like braking), and the held
+  // blocks (setupScrollFx) give the key lines their extra time on screen.
   function scrollStops() {
-    var pad = parseFloat(getComputedStyle(root).scrollPaddingTop) || 0;
-    var list = storyStops().concat($$("main > section:not(#story)").map(function (el) {
-      return Math.round(el.getBoundingClientRect().top + window.scrollY - pad);
-    }));
-    // A held block: stop once it is pinned and fully lit (see setupScrollFx).
-    $$(".hold.is-held").forEach(function (h) {
-      var top = parseFloat(h.style.getPropertyValue("--hold-top")) || 0;
-      list.push(Math.round(h.getBoundingClientRect().top + window.scrollY - top + 0.68 * holdPin(h) * window.innerHeight));
-    });
-    return list.filter(function (y) { return y > 0; }).sort(function (a, b) { return a - b; });
+    return storyStops().filter(function (y) { return y > 0; }).sort(function (a, b) { return a - b; });
   }
   function holdPin(h) { return parseFloat(h.getAttribute("data-pin")) || 0.85; }
   // The first stop in "list" passed going from "from" to "to" (a stop at "from" doesn't count), or null.
@@ -1167,13 +1160,13 @@
     var pillars = $(".pillars"), cards = pillars ? $$(".pillar", pillars) : [];
     var asides = $$(".split-aside"), lists = $$(".focus-list").filter(function (l) { return !l.closest(".hold"); });
     var holds = $$(".hold"); // how long each stays is its data-pin, in screen heights
-    // Reading spotlight: the block being read is at full strength and the text
-    // around it waits a little dimmer. Blocks take turns in reading order, title
+    // Reading spotlight: the block being read is in solid black (white on dark
+    // sections) and the text around it waits in grey. Blocks take turns in reading order, title
     // first: each hands over once its bottom edge rises past the reading line, a
     // quarter of the way down the screen. Where a title column sticks beside the
     // text (wide screens), it stays lit with the first block next to it.
     var SPOT = ".head, .prose > p, .intro-aside .highlight, .focus-list, .closing, .tasks-after, .time-highlight, .step, .benefit, .values > li, .hold-in";
-    var UPCOMING = 0.3, READ = 0.5, spots = [];
+    var spots = [];
     var result = $(".result"), zoom = $(".work-zoom");
     var queued = false;
 
@@ -1267,7 +1260,7 @@
           var s = spots[n], done, f;
           if (s.lead >= 0) { done = pass[s.lead]; f = prev * (1 - done); } // sticky title column
           else { done = pass[n]; f = prev * (1 - done); prev = done; }
-          var v = Math.round((f + (1 - f) * (UPCOMING + (READ - UPCOMING) * done)) * 100) / 100;
+          var v = Math.round(f * 100) / 100;
           if (v !== s.v) { s.v = v; s.el.style.setProperty("--spot", v); }
         }
       }

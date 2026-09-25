@@ -229,8 +229,11 @@
 
     var c = C.contact, f = c.fields;
     var mailto = !c.formEndpoint;
+    // Same limits as the console's lead endpoint (console/lib/leads.ts LIMITS).
+    var MAX = { name: 120, business: 160, email: 200, island: 80, type: 120, message: 5000 };
     function field(name, type, full, required, extra) {
       var id = "f-" + name;
+      extra = ' maxlength="' + MAX[name] + '"' + (extra || "");
       var input = type === "textarea"
         ? '<textarea id="' + id + '" name="' + name + '" rows="5"' + (extra || "") + (required ? " required" : "") + "></textarea>"
         : '<input id="' + id + '" name="' + name + '" type="' + type + '"' + (extra || "") + (required ? " required" : "") + ">";
@@ -254,7 +257,7 @@
         '<div class="sr-only" aria-hidden="true"><label for="f-gotcha">Leave empty</label>' +
           '<input id="f-gotcha" name="_gotcha" type="text" tabindex="-1" autocomplete="off"></div>' +
         '<div class="form-foot"><button class="btn btn--primary" type="submit">' + esc(c.submitLabel) + " " + ARROW + "</button>" +
-          '<p class="form-note">' + esc(c.note) + (mailto && UI.mailtoNote ? " " + esc(UI.mailtoNote) : "") + "</p></div>" +
+          '<p class="form-note">' + esc(c.note) + (c.privacy ? " " + esc(c.privacy.replace("{email}", c.email)) : "") + (mailto && UI.mailtoNote ? " " + esc(UI.mailtoNote) : "") + "</p></div>" +
         '<p class="form-status" role="status" aria-live="polite"></p>' +
       "</form></div>");
 
@@ -785,12 +788,21 @@
       status.textContent = text.replace("{email}", c.email);
       status.classList.toggle("is-error", !!isError);
     }
+    // Beyond the browser's own checks: a required field of only spaces is empty,
+    // and an email needs a dot in its domain (as the console requires).
+    function check(el) {
+      var v = el.value.trim(), msg = "";
+      if (el.required && !v) msg = UI.formInvalid;
+      else if (el.type === "email" && v && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) msg = UI.formInvalid;
+      el.setCustomValidity(msg);
+      return el.checkValidity();
+    }
     form.addEventListener("input", function (e) {
-      if (e.target.getAttribute("aria-invalid") && e.target.checkValidity()) e.target.removeAttribute("aria-invalid");
+      if (e.target.getAttribute("aria-invalid") && check(e.target)) e.target.removeAttribute("aria-invalid");
     });
     form.addEventListener("submit", function (e) {
       e.preventDefault();
-      var fields = $$("input, textarea", form), bad = fields.filter(function (el) { return !el.checkValidity(); });
+      var fields = $$("input, textarea", form), bad = fields.filter(function (el) { return !check(el); });
       fields.forEach(function (el) { if (bad.indexOf(el) < 0) el.removeAttribute("aria-invalid"); else el.setAttribute("aria-invalid", "true"); });
       if (bad.length) {
         say(UI.formInvalid, true);
@@ -803,6 +815,7 @@
         say(UI.formSending);
         fetch(c.formEndpoint, { method: "POST", body: data, headers: { Accept: "application/json" } })
           .then(function (r) {
+            if (r.status === 422) return say(UI.formInvalid, true); // the console found a field it can't accept
             if (!r.ok) throw new Error(r.status);
             say(UI.formSent);
             form.reset();

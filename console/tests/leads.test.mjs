@@ -73,6 +73,16 @@ describe("POST /api/leads (website form endpoint)", () => {
     assert.equal(leadNamed("Spam Bot"), undefined);
   });
 
+  it("never hands stored leads back to the public", async () => {
+    await post(form({ name: "Private Person", email: "p@example.com", message: "private" }), { origin: "https://tapesway.com" });
+    assert.ok(leadNamed("Private Person"));
+    for (const path of ["/api/leads", "/leads"]) {
+      const r = await fetch(srv.base + path, { redirect: "manual" });
+      assert.notEqual(r.status, 200, path);
+      assert.ok(!(await r.text()).includes("Private Person"), path);
+    }
+  });
+
   it("rejects other websites and unsupported bodies", async () => {
     let r = await post(form({ name: "Evil", email: "e@example.com", message: "x" }), { origin: "https://evil.example" });
     assert.equal(r.status, 403);
